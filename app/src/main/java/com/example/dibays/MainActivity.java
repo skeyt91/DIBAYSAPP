@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView countryBadgeText;
     private TextView countryCodeText;
     private Country selectedCountry = COUNTRIES[20];
+    private SupabaseClient.Session activeSession;
 
     private static final Country[] COUNTRIES = new Country[]{
             new Country("AF", "Afganistan", "+93"),
@@ -267,7 +268,7 @@ public class MainActivity extends AppCompatActivity {
         );
         root.addView(card, cardParams);
 
-        TextView title = title("Administra tus fardos fácil y seguro", 30);
+        TextView title = title("Administra tus fardos facil y seguro", 30);
         card.addView(title);
 
         TextView subtitle = body("Controla tus ventas, deudas, clientes, proveedores e inventario desde tu celular.", 16);
@@ -300,9 +301,9 @@ public class MainActivity extends AppCompatActivity {
         content.addView(topBackRow(v -> showWelcomeScreen()));
         content.addView(progressBar());
 
-        TextView title = title("Tu información siempre segura", 28);
+        TextView title = title("Tu informacion siempre segura", 28);
         content.addView(title, marginTop(42));
-        content.addView(body("Accede con tu número de celular, sin contraseñas complicadas.", 16), marginTop(12));
+        content.addView(body("Accede con tu numero de celular, sin contrasenas complicadas.", 16), marginTop(12));
 
         TextView label = label("Ingresa tu celular *");
         content.addView(label, marginTop(36));
@@ -337,7 +338,7 @@ public class MainActivity extends AppCompatActivity {
         phoneFieldContainer.addView(divider, new LinearLayout.LayoutParams(dp(1), dp(28)));
 
         phoneInput = new EditText(this);
-        phoneInput.setHint("Número celular");
+        phoneInput.setHint("Numero celular");
         phoneInput.setTextSize(16);
         phoneInput.setSingleLine(true);
         phoneInput.setTextColor(PRIMARY);
@@ -362,7 +363,7 @@ public class MainActivity extends AppCompatActivity {
         content.addView(phoneFieldContainer, marginTop(8));
 
         termsCheckBox = new CheckBox(this);
-        termsCheckBox.setText("Acepto los términos y condiciones");
+        termsCheckBox.setText("Acepto los terminos y condiciones");
         termsCheckBox.setTextColor(TEXT_MUTED);
         termsCheckBox.setTextSize(14);
         termsCheckBox.setButtonTintList(new ColorStateList(
@@ -378,7 +379,7 @@ public class MainActivity extends AppCompatActivity {
                 updateRegisterState(true);
                 return;
             }
-            registerWithSupabase();
+            requestOtp();
         });
         FrameLayout.LayoutParams bottomButtonParams = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -490,7 +491,7 @@ public class MainActivity extends AppCompatActivity {
         loginPanel.addView(phoneLogin, marginTop(24));
 
         Button googleLogin = outlineButton("Ingresar con Google");
-        googleLogin.setOnClickListener(v -> showAccountsScreen());
+        googleLogin.setOnClickListener(v -> Toast.makeText(this, "Google requiere configurar OAuth en Supabase.", Toast.LENGTH_LONG).show());
         loginPanel.addView(googleLogin, marginTop(12));
 
         TextView register = text("No tienes una cuenta? Registrate", 14, TEXT_MUTED, false);
@@ -524,6 +525,48 @@ public class MainActivity extends AppCompatActivity {
         setContentView(root);
     }
 
+    private void showOtpScreen(String phone, String countryCode) {
+        FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(Color.WHITE);
+
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(dp(22), dp(28), dp(22), dp(28));
+        root.addView(content, fullSize());
+
+        content.addView(topBackRow(v -> showRegisterScreen()));
+        content.addView(progressBar());
+
+        content.addView(title("Verifica tu celular", 30), marginTop(42));
+        content.addView(body("Ingresa el codigo SMS enviado a " + countryCode + " " + phone + ".", 16), marginTop(10));
+
+        EditText otpInput = new EditText(this);
+        otpInput.setHint("Codigo de verificacion");
+        otpInput.setSingleLine(true);
+        otpInput.setTextSize(18);
+        otpInput.setTextColor(PRIMARY);
+        otpInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+        otpInput.setBackground(roundedStroke(Color.WHITE, BORDER, 18, 1));
+        otpInput.setPadding(dp(14), 0, dp(14), 0);
+        content.addView(otpInput, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(58)
+        ));
+
+        Button verify = primaryButton("Verificar y continuar");
+        content.addView(verify, marginTop(22));
+        verify.setOnClickListener(v -> {
+            String token = otpInput.getText().toString().trim();
+            if (token.isEmpty()) {
+                otpInput.setBackground(roundedStroke(Color.WHITE, ERROR, 18, 2));
+                return;
+            }
+            verifyOtp(phone, countryCode, token, verify);
+        });
+
+        setContentView(root);
+    }
+
     private void showAccountsScreen() {
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(SURFACE);
@@ -541,21 +584,29 @@ public class MainActivity extends AppCompatActivity {
         TextView subtitle = body("Selecciona o administra las cuentas de tu negocio.", 16);
         content.addView(subtitle, marginTop(8));
 
+        LinearLayout accountList = new LinearLayout(this);
+        accountList.setOrientation(LinearLayout.VERTICAL);
+        content.addView(accountList, marginTop(28));
+
+        accountList.addView(text("Cargando cuentas...", 15, TEXT_MUTED, false));
+        loadAccounts(accountList);
+
+        setContentView(root);
+    }
+
+    private View accountCard(SupabaseClient.Account account) {
         LinearLayout accountCard = new LinearLayout(this);
         accountCard.setOrientation(LinearLayout.VERTICAL);
         accountCard.setPadding(dp(18), dp(18), dp(18), dp(18));
         accountCard.setBackground(roundedStroke(Color.WHITE, BORDER, 20, 1));
-        content.addView(accountCard, marginTop(28));
 
-        TextView badge = text("DIBAYS FARDOS", 13, WHATSAPP, true);
-        accountCard.addView(badge);
-        accountCard.addView(text("Cuenta principal", 22, INK, true), marginTop(8));
-        accountCard.addView(body("Inventario, ventas, clientes, proveedores y deudas.", 14), marginTop(6));
+        accountCard.addView(text("DIBAYS FARDOS", 13, WHATSAPP, true));
+        accountCard.addView(text(account.name == null || account.name.isEmpty() ? "Cuenta principal" : account.name, 22, INK, true), marginTop(8));
+        accountCard.addView(body("Telefono: " + account.countryCode + " " + account.phone, 14), marginTop(6));
 
         Button enter = primaryButton("Entrar");
         accountCard.addView(enter, marginTop(18));
-
-        setContentView(root);
+        return accountCard;
     }
 
     private LinearLayout trustRow(String title, String value) {
@@ -582,7 +633,7 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout row = new LinearLayout(this);
         row.setGravity(Gravity.CENTER_VERTICAL);
 
-        TextView back = text("‹", 34, PRIMARY, true);
+        TextView back = text("<", 30, PRIMARY, true);
         back.setGravity(Gravity.CENTER);
         back.setOnClickListener(listener);
         row.addView(back, new LinearLayout.LayoutParams(dp(42), dp(42)));
@@ -652,25 +703,81 @@ public class MainActivity extends AppCompatActivity {
                 && termsCheckBox.isChecked();
     }
 
-    private void registerWithSupabase() {
+    private void requestOtp() {
         String phone = phoneInput.getText().toString().trim();
         String countryCode = selectedCountry.dialCode;
+        String fullPhone = countryCode + phone;
         continueButton.setEnabled(false);
-        continueButton.setText("Conectando...");
+        continueButton.setText("Enviando codigo...");
 
         new Thread(() -> {
             try {
                 new SupabaseClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-                        .registerUser(phone, countryCode);
+                        .requestPhoneOtp(fullPhone);
                 runOnUiThread(() -> {
-                    Toast.makeText(this, "Cuenta conectada con Supabase", Toast.LENGTH_SHORT).show();
-                    showAccountsScreen();
+                    Toast.makeText(this, "Codigo enviado por SMS", Toast.LENGTH_SHORT).show();
+                    showOtpScreen(phone, countryCode);
                 });
             } catch (Exception exception) {
                 runOnUiThread(() -> {
                     continueButton.setText("Continuar");
                     updateRegisterState(false);
-                    Toast.makeText(this, "No se pudo conectar: " + exception.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "No se pudo enviar codigo: " + exception.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
+    }
+
+    private void verifyOtp(String phone, String countryCode, String token, Button verifyButton) {
+        String fullPhone = countryCode + phone;
+        verifyButton.setEnabled(false);
+        verifyButton.setText("Verificando...");
+
+        new Thread(() -> {
+            try {
+                SupabaseClient client = new SupabaseClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY);
+                activeSession = client.verifyPhoneOtp(fullPhone, token);
+                client.registerUser(phone, countryCode, activeSession);
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Cuenta verificada", Toast.LENGTH_SHORT).show();
+                    showAccountsScreen();
+                });
+            } catch (Exception exception) {
+                runOnUiThread(() -> {
+                    verifyButton.setEnabled(true);
+                    verifyButton.setText("Verificar y continuar");
+                    Toast.makeText(this, "No se pudo verificar: " + exception.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
+    }
+
+    private void loadAccounts(LinearLayout accountList) {
+        if (activeSession == null) {
+            accountList.removeAllViews();
+            accountList.addView(text("Inicia sesion para cargar tus cuentas.", 15, TEXT_MUTED, false));
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                java.util.List<SupabaseClient.Account> accounts =
+                        new SupabaseClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                                .listAccounts(activeSession.accessToken);
+                runOnUiThread(() -> {
+                    accountList.removeAllViews();
+                    if (accounts.isEmpty()) {
+                        accountList.addView(text("No hay cuentas registradas.", 15, TEXT_MUTED, false));
+                        return;
+                    }
+                    for (SupabaseClient.Account account : accounts) {
+                        accountList.addView(accountCard(account), marginTop(10));
+                    }
+                });
+            } catch (Exception exception) {
+                runOnUiThread(() -> {
+                    accountList.removeAllViews();
+                    accountList.addView(text("No se pudieron cargar las cuentas: " + exception.getMessage(), 14, ERROR, false));
                 });
             }
         }).start();
@@ -730,7 +837,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Button whatsappButton(String value) {
         Button button = new Button(this);
-        button.setText("☎  " + value);
+        button.setText("WhatsApp  " + value);
         button.setTextSize(14);
         button.setTextColor(Color.WHITE);
         button.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
