@@ -18,12 +18,30 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.Assistant
+import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.LocalOffer
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.PointOfSale
+import androidx.compose.material.icons.filled.QueryStats
+import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.Upcoming
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -37,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -127,24 +146,12 @@ fun DashboardScreen(
                         )
                     }
 
-                    SummaryCard(
-                        label = "Productos",
-                        value = state.products.size.toString(),
-                        onAction = onOpenInventory,
-                    )
-                    SummaryCard(
-                        label = "Ventas",
-                        value = "0",
-                        onAction = onOpenSales,
-                    )
-                    SummaryCard(
-                        label = "Usuarios",
-                        value = "Ver",
-                        onAction = onOpenUsers,
-                    )
+                    SummaryCard("Productos", state.products.size.toString(), onOpenInventory)
+                    SummaryCard("Ventas", "0", onOpenSales)
+                    SummaryCard("Usuarios", "Ver", onOpenUsers)
 
                     state.error?.let { error ->
-                        ErrorCard(error = error)
+                        ErrorCard(error)
                     }
                 }
             }
@@ -239,12 +246,7 @@ private fun HeaderSection(
                 )
             }
 
-            Text(
-                text = "◉",
-                color = Teal,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-            )
+            Text(text = "◉", color = Teal, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
 
         Spacer(modifier = Modifier.height(14.dp))
@@ -255,6 +257,7 @@ private fun HeaderSection(
             onValueChange = onSearchQueryChange,
             singleLine = true,
             label = { Text("Buscar en inventario") },
+            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -295,7 +298,7 @@ private fun SearchResultsCard(
                 }
             } else {
                 products.take(5).forEach { product ->
-                    ProductRow(product = product)
+                    ProductRow(product)
                     Spacer(modifier = Modifier.height(10.dp))
                 }
             }
@@ -327,10 +330,7 @@ private fun SummaryCard(
                     fontWeight = FontWeight.SemiBold,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = value,
-                    color = Color(0xFF6B7280),
-                )
+                Text(text = value, color = Color(0xFF6B7280))
             }
 
             Button(
@@ -350,20 +350,20 @@ private fun DrawerContent(
     activeRoute: String,
 ) {
     val entries = listOf(
-        DrawerEntry("Inicio", Screen.Dashboard.route, isActive = true),
-        DrawerEntry("Vender", Screen.Sales.route),
-        DrawerEntry("Pedidos", Screen.Orders.route, badge = "0"),
-        DrawerEntry("Productos", Screen.Inventory.route),
-        DrawerEntry("Asistente Inteligente", Screen.Assistant.route),
-        DrawerEntry("Catalogo Online", Screen.CatalogPublic.route),
-        DrawerEntry("Finanzas", Screen.Finances.route),
-        DrawerEntry("Cupon", Screen.Coupon.route, badge = "NUEVO"),
-        DrawerEntry("Clientes", Screen.Clients.route),
-        DrawerEntry("Transacciones", Screen.Transactions.route),
-        DrawerEntry("Estadisticas", Screen.Reports.route),
-        DrawerEntry("Usuarios", Screen.Users.route),
-        DrawerEntry("Configuraciones", Screen.Settings.route),
-        DrawerEntry("Ayuda", Screen.Help.route),
+        DrawerEntry("Inicio", Screen.Dashboard.route, Icons.Default.Home, isActive = true),
+        DrawerEntry("Vender", Screen.Sales.route, Icons.Default.PointOfSale),
+        DrawerEntry("Pedidos", Screen.Orders.route, Icons.Default.Upcoming, badge = "0"),
+        DrawerEntry("Productos", Screen.Inventory.route, Icons.Default.Inventory2),
+        DrawerEntry("Asistente Inteligente", Screen.Assistant.route, Icons.Default.Assistant),
+        DrawerEntry("Catalogo Online", Screen.CatalogPublic.route, Icons.Default.Storefront),
+        DrawerEntry("Finanzas", Screen.Finances.route, Icons.Default.AccountBalance),
+        DrawerEntry("Cupon", Screen.Coupon.route, Icons.Default.LocalOffer, badge = "NUEVO"),
+        DrawerEntry("Clientes", Screen.Clients.route, Icons.Default.People),
+        DrawerEntry("Transacciones", Screen.Transactions.route, Icons.Default.SwapHoriz),
+        DrawerEntry("Estadisticas", Screen.Reports.route, Icons.Default.QueryStats),
+        DrawerEntry("Usuarios", Screen.Users.route, Icons.Default.Groups),
+        DrawerEntry("Configuraciones", Screen.Settings.route, Icons.Default.Settings),
+        DrawerEntry("Ayuda", Screen.Help.route, Icons.Default.HelpOutline),
     )
 
     Column(
@@ -377,15 +377,19 @@ private fun DrawerContent(
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
         )
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Menu",
+            color = Color.White.copy(alpha = 0.55f),
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Spacer(modifier = Modifier.height(14.dp))
 
         entries.forEach { item ->
             DrawerMenuItem(
                 item = item.copy(isActive = item.route == activeRoute || item.isActive),
                 onClick = {
-                    if (item.route != activeRoute) {
-                        onNavigate(item.route)
-                    }
+                    if (item.route != activeRoute) onNavigate(item.route)
                 },
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -420,6 +424,13 @@ private fun DrawerMenuItem(
                 .background(stripeColor, RoundedCornerShape(99.dp)),
         )
         Spacer(modifier = Modifier.width(10.dp))
+        Icon(
+            imageVector = item.icon,
+            contentDescription = null,
+            tint = if (item.isActive) Teal else Color.White.copy(alpha = 0.8f),
+            modifier = Modifier.size(18.dp),
+        )
+        Spacer(modifier = Modifier.width(10.dp))
         Text(
             text = item.title,
             color = Color.White,
@@ -446,12 +457,7 @@ private fun CounterBadge(text: String) {
             .padding(horizontal = 8.dp, vertical = 2.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = text,
-            color = Color.White,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-        )
+        Text(text = text, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -508,10 +514,7 @@ private fun ProductRow(product: ProductSummary) {
             }
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = product.name,
-                    fontWeight = FontWeight.SemiBold,
-                )
+                Text(text = product.name, fontWeight = FontWeight.SemiBold)
                 Text(
                     text = listOfNotNull(
                         product.code.takeIf { it.isNotBlank() },
@@ -522,10 +525,7 @@ private fun ProductRow(product: ProductSummary) {
                 )
             }
 
-            Text(
-                text = "Stock ${product.stock}",
-                fontWeight = FontWeight.SemiBold,
-            )
+            Text(text = "Stock ${product.stock}", fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -577,6 +577,7 @@ private fun ErrorCard(error: String) {
 private data class DrawerEntry(
     val title: String,
     val route: String,
+    val icon: ImageVector,
     val badge: String? = null,
     val isActive: Boolean = false,
 )
