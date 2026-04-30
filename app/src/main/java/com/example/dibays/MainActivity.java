@@ -565,27 +565,27 @@ public class MainActivity extends AppCompatActivity {
 
         panel.addView(profileAvatar(createdAccount), marginTop(18));
 
-        TextView name = text(resolveAccountName(createdAccount), 22, INK, true);
+        TextView name = text(resolveAccountName(createdAccount), 19, INK, true);
         name.setGravity(Gravity.CENTER_HORIZONTAL);
-        panel.addView(name, marginTop(14));
+        panel.addView(name, marginTop(12));
 
-        TextView phone = text(resolveAccountPhone(createdAccount), 15, Color.rgb(172, 176, 184), false);
+        TextView phone = text(resolveAccountPhone(createdAccount), 13, Color.rgb(186, 186, 190), false);
         phone.setGravity(Gravity.CENTER_HORIZONTAL);
         panel.addView(phone, marginTop(4));
 
-        TextView section = text("Account Settings", 16, Color.rgb(190, 190, 194), false);
-        panel.addView(section, marginTop(30));
+        TextView section = text("Account Settings", 15, Color.rgb(190, 190, 194), false);
+        panel.addView(section, marginTop(28));
 
-        panel.addView(settingsRow("Profile setting", "user", v -> Toast.makeText(this, "Perfil", Toast.LENGTH_SHORT).show()), marginTop(12));
-        panel.addView(settingsRow("Change password", "lock", v -> Toast.makeText(this, "Cambiar PIN", Toast.LENGTH_SHORT).show()), marginTop(8));
-        panel.addView(settingsRow("Chat support", "chat", v -> Toast.makeText(this, "Soporte en chat", Toast.LENGTH_SHORT).show()), marginTop(8));
+        panel.addView(settingsRow("Profile setting", "user", v -> Toast.makeText(this, "Perfil", Toast.LENGTH_SHORT).show()), marginTop(10));
+        panel.addView(settingsRow("Change password", "lock", v -> Toast.makeText(this, "Cambiar PIN", Toast.LENGTH_SHORT).show()), marginTop(6));
+        panel.addView(settingsRow("Chat support", "chat", v -> Toast.makeText(this, "Soporte en chat", Toast.LENGTH_SHORT).show()), marginTop(6));
 
         View divider = new DashedDividerView(this);
         LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(14)
+                dp(12)
         );
-        dividerParams.setMargins(0, dp(20), 0, dp(14));
+        dividerParams.setMargins(0, dp(18), 0, dp(10));
         panel.addView(divider, dividerParams);
 
         panel.addView(profileActionRow("Log out", PRIMARY, false, v -> {
@@ -602,7 +602,7 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout header = new LinearLayout(this);
         header.setGravity(Gravity.CENTER_VERTICAL);
 
-        TextView menu = text("≡", 22, Color.rgb(181, 181, 187), false);
+        TextView menu = text("≡", 21, Color.rgb(182, 182, 188), false);
         menu.setGravity(Gravity.CENTER);
         menu.setBackground(rounded(Color.WHITE, 18));
         header.addView(menu, new LinearLayout.LayoutParams(dp(36), dp(36)));
@@ -623,11 +623,10 @@ public class MainActivity extends AppCompatActivity {
         wrapper.setOrientation(LinearLayout.VERTICAL);
 
         FrameLayout avatar = new FrameLayout(this);
-        avatar.setBackground(rounded(Color.rgb(241, 235, 255), 999));
-        LinearLayout.LayoutParams avatarParams = new LinearLayout.LayoutParams(dp(72), dp(72));
+        avatar.setBackground(rounded(Color.rgb(242, 237, 255), 999));
+        LinearLayout.LayoutParams avatarParams = new LinearLayout.LayoutParams(dp(70), dp(70));
 
-        TextView icon = text("●", 28, Color.rgb(123, 75, 255), true);
-        icon.setGravity(Gravity.CENTER);
+        View icon = new ProfileAvatarGlyph(this);
         avatar.addView(icon, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -647,10 +646,9 @@ public class MainActivity extends AppCompatActivity {
 
         FrameLayout iconWrap = new FrameLayout(this);
         iconWrap.setBackground(rounded(Color.rgb(247, 243, 255), 14));
-        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dp(34), dp(34));
+        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dp(32), dp(32));
 
-        TextView icon = text(iconGlyph(iconType), 17, Color.rgb(145, 103, 255), true);
-        icon.setGravity(Gravity.CENTER);
+        View icon = new SettingsGlyph(this, iconType);
         iconWrap.addView(icon, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -660,12 +658,12 @@ public class MainActivity extends AppCompatActivity {
 
         TextView text = text(label, 14, PRIMARY, false);
         LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
-        textParams.setMargins(dp(14), 0, dp(8), 0);
+        textParams.setMargins(dp(12), 0, dp(8), 0);
         row.addView(text, textParams);
 
-        TextView arrow = text("›", 23, Color.rgb(176, 176, 182), false);
+        TextView arrow = text(">", 20, Color.rgb(176, 176, 182), false);
         arrow.setGravity(Gravity.CENTER);
-        row.addView(arrow, new LinearLayout.LayoutParams(dp(20), dp(20)));
+        row.addView(arrow, new LinearLayout.LayoutParams(dp(18), dp(18)));
         return row;
     }
 
@@ -673,18 +671,79 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(0, dp(10), 0, dp(10));
+        row.setPadding(0, dp(8), 0, dp(8));
         row.setOnClickListener(listener);
 
-        TextView icon = text(destructive ? "⊘" : "↩", 18, color, true);
+        TextView icon = text(destructive ? "!" : "↩", 17, color, true);
         icon.setGravity(Gravity.CENTER);
-        row.addView(icon, new LinearLayout.LayoutParams(dp(24), dp(24)));
+        row.addView(icon, new LinearLayout.LayoutParams(dp(20), dp(20)));
 
-        TextView labelView = text(label, 15, color, false);
+        TextView labelView = text(label, 14, color, false);
         LinearLayout.LayoutParams labelParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
-        labelParams.setMargins(dp(14), 0, 0, 0);
+        labelParams.setMargins(dp(12), 0, 0, 0);
         row.addView(labelView, labelParams);
         return row;
+    }
+
+
+    private static class ProfileAvatarGlyph extends View {
+        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+        ProfileAvatarGlyph(android.content.Context context) {
+            super(context);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            float w = getWidth();
+            float h = getHeight();
+            float cx = w / 2f;
+            float cy = h / 2f;
+
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(Color.rgb(145, 103, 255));
+            canvas.drawCircle(cx, cy - h * 0.12f, w * 0.14f, paint);
+            canvas.drawRoundRect(new RectF(cx - w * 0.20f, cy + h * 0.02f, cx + w * 0.20f, cy + h * 0.30f), w * 0.14f, w * 0.14f, paint);
+        }
+    }
+
+    private static class SettingsGlyph extends View {
+        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final String type;
+
+        SettingsGlyph(android.content.Context context, String type) {
+            super(context);
+            this.type = type == null ? "user" : type;
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            float w = getWidth();
+            float h = getHeight();
+            float cx = w / 2f;
+            float cy = h / 2f;
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(Math.max(2f, w * 0.08f));
+            paint.setColor(Color.rgb(145, 103, 255));
+
+            if ("lock".equals(type)) {
+                canvas.drawRoundRect(new RectF(w * 0.26f, h * 0.42f, w * 0.74f, h * 0.74f), w * 0.08f, w * 0.08f, paint);
+                canvas.drawArc(new RectF(w * 0.34f, h * 0.18f, w * 0.66f, h * 0.50f), 180f, 180f, false, paint);
+                return;
+            }
+
+            if ("chat".equals(type)) {
+                canvas.drawRoundRect(new RectF(w * 0.22f, h * 0.22f, w * 0.78f, h * 0.68f), w * 0.16f, w * 0.16f, paint);
+                canvas.drawLine(w * 0.38f, h * 0.68f, w * 0.30f, h * 0.84f, paint);
+                return;
+            }
+
+            paint.setStyle(Paint.Style.FILL);
+            canvas.drawCircle(cx, cy - h * 0.14f, w * 0.12f, paint);
+            canvas.drawRoundRect(new RectF(cx - w * 0.14f, cy + h * 0.02f, cx + w * 0.14f, cy + h * 0.30f), w * 0.12f, w * 0.12f, paint);
+        }
     }
 
     private static class DashedDividerView extends View {
@@ -1231,3 +1290,4 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 }
+
