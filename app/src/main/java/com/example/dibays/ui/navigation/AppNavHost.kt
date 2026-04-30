@@ -24,6 +24,7 @@ import com.example.dibays.ui.LoginViewModel
 import com.example.dibays.ui.RecoverViewModel
 import com.example.dibays.ui.RegisterViewModel
 import com.example.dibays.ui.screens.dashboard.DashboardScreen
+import com.example.dibays.ui.screens.inventario.InventarioRoute
 import com.example.dibays.ui.screens.recover.RecoverAccountScreen
 import com.example.dibays.ui.screens.shared.FeatureScreen
 import com.example.dibays.ui.screens.register.RegisterScreen
@@ -138,11 +139,12 @@ fun AppNavHost(
         }
 
         composable(Screen.Inventory.route) {
-            FeatureScreen(
-                title = "Inventario",
-                description = "Gestion de fardos, stock, precios y edicion rapida.",
-                actionLabel = "Volver al dashboard",
-                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            val session = uiState.session
+            InventarioRoute(
+                onBackToDashboard = {
+                    navController.popBackStack(Screen.Dashboard.route, inclusive = false)
+                },
+                accessToken = session?.accessToken.orEmpty(),
             )
         }
 

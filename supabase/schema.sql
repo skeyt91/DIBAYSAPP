@@ -60,6 +60,7 @@ drop policy if exists "usuarios propios update" on public.usuarios;
 drop policy if exists "productos propios select" on public.productos;
 drop policy if exists "productos propios insert" on public.productos;
 drop policy if exists "productos propios update" on public.productos;
+drop policy if exists "productos propios delete" on public.productos;
 
 create policy "cuentas propias select"
 on public.cuentas for select
@@ -108,3 +109,8 @@ on public.productos for update
 to anon, authenticated
 using (auth_user_id = auth.uid() or auth_user_id is null)
 with check (auth_user_id = auth.uid() or auth_user_id is null);
+
+create policy "productos propios delete"
+on public.productos for delete
+to anon, authenticated
+using (auth_user_id = auth.uid() or auth_user_id is null);
