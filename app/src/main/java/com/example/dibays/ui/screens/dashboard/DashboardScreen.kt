@@ -40,6 +40,12 @@ fun DashboardScreen(
     state: DashboardUiState,
     onRefresh: () -> Unit,
     onLogout: () -> Unit,
+    onOpenInventory: () -> Unit,
+    onOpenSales: () -> Unit,
+    onOpenClients: () -> Unit,
+    onOpenProviders: () -> Unit,
+    onOpenUsers: () -> Unit,
+    onOpenReports: () -> Unit,
 ) {
     val lowStock = state.products.filter { it.stock in 1..5 }
     val totalInventoryValue = state.products.sumOf { it.stock * it.price }
@@ -97,13 +103,23 @@ fun DashboardScreen(
                     DashboardAction(
                         label = "Nueva venta",
                         modifier = Modifier.weight(1f),
-                        onClick = { },
+                        onClick = onOpenSales,
                     )
                     DashboardAction(
                         label = "Nuevo producto",
                         modifier = Modifier.weight(1f),
-                        onClick = { },
+                        onClick = onOpenInventory,
                     )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    DashboardAction(label = "Clientes", modifier = Modifier.weight(1f), onClick = onOpenClients)
+                    DashboardAction(label = "Proveedores", modifier = Modifier.weight(1f), onClick = onOpenProviders)
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    DashboardAction(label = "Usuarios", modifier = Modifier.weight(1f), onClick = onOpenUsers)
+                    DashboardAction(label = "Reportes", modifier = Modifier.weight(1f), onClick = onOpenReports)
                 }
             }
         }

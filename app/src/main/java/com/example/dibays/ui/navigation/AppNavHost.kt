@@ -25,14 +25,9 @@ import com.example.dibays.ui.RecoverViewModel
 import com.example.dibays.ui.RegisterViewModel
 import com.example.dibays.ui.screens.dashboard.DashboardScreen
 import com.example.dibays.ui.screens.recover.RecoverAccountScreen
+import com.example.dibays.ui.screens.shared.FeatureScreen
 import com.example.dibays.ui.screens.register.RegisterScreen
 import com.example.dibays.ui.screens.login.LoginScreen
-
-private const val ROUTE_LOADING = "loading"
-private const val ROUTE_LOGIN = "login"
-private const val ROUTE_RECOVER_ACCOUNT = "recover_account"
-private const val ROUTE_REGISTER_ACCOUNT = "register_account"
-private const val ROUTE_DASHBOARD = "dashboard"
 
 @Composable
 fun AppNavHost(
@@ -45,18 +40,18 @@ fun AppNavHost(
 
     LaunchedEffect(uiState.ready, uiState.session) {
         if (!uiState.ready) return@LaunchedEffect
-        val target = if (uiState.session == null) ROUTE_LOGIN else ROUTE_DASHBOARD
+        val target = if (uiState.session == null) Screen.Login.route else Screen.Dashboard.route
         navController.navigate(target) {
-            popUpTo(ROUTE_LOADING) { inclusive = true }
+            popUpTo(Screen.Loading.route) { inclusive = true }
             launchSingleTop = true
         }
     }
 
     NavHost(
         navController = navController,
-        startDestination = ROUTE_LOADING,
+        startDestination = Screen.Loading.route,
     ) {
-        composable(ROUTE_LOADING) {
+        composable(Screen.Loading.route) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
@@ -65,18 +60,18 @@ fun AppNavHost(
             }
         }
 
-        composable(ROUTE_LOGIN) {
+        composable(Screen.Login.route) {
             LoginScreen(
                 state = uiState,
                 onEmailChange = viewModel::onEmailChange,
                 onPinChange = viewModel::onPinChange,
                 onSubmit = viewModel::login,
-                onRecoverAccount = { navController.navigate(ROUTE_RECOVER_ACCOUNT) },
-                onRegister = { navController.navigate(ROUTE_REGISTER_ACCOUNT) },
+                onRecoverAccount = { navController.navigate(Screen.RecoverAccount.route) },
+                onRegister = { navController.navigate(Screen.RegisterAccount.route) },
             )
         }
 
-        composable(ROUTE_RECOVER_ACCOUNT) {
+        composable(Screen.RecoverAccount.route) {
             val recoverViewModel: RecoverViewModel = viewModel(
                 factory = RecoverViewModel.factory(authRepository),
             )
@@ -87,12 +82,12 @@ fun AppNavHost(
                 onEmailChange = recoverViewModel::onEmailChange,
                 onSubmit = recoverViewModel::sendRecoveryEmail,
                 onBackToLogin = {
-                    navController.popBackStack(ROUTE_LOGIN, inclusive = false)
+                    navController.popBackStack(Screen.Login.route, inclusive = false)
                 },
             )
         }
 
-        composable(ROUTE_REGISTER_ACCOUNT) {
+        composable(Screen.RegisterAccount.route) {
             val registerViewModel: RegisterViewModel = viewModel(
                 factory = RegisterViewModel.factory(authRepository, sessionStore),
             )
@@ -106,12 +101,12 @@ fun AppNavHost(
                 onConfirmPinChange = registerViewModel::onConfirmPinChange,
                 onSubmit = registerViewModel::register,
                 onBackToLogin = {
-                    navController.popBackStack(ROUTE_LOGIN, inclusive = false)
+                    navController.popBackStack(Screen.Login.route, inclusive = false)
                 },
             )
         }
 
-        composable(ROUTE_DASHBOARD) {
+        composable(Screen.Dashboard.route) {
             val session = uiState.session
             val dashboardRepository = remember {
                 DashboardRepository(
@@ -133,6 +128,66 @@ fun AppNavHost(
                 state = dashboardState,
                 onRefresh = dashboardViewModel::refresh,
                 onLogout = viewModel::logout,
+                onOpenInventory = { navController.navigate(Screen.Inventory.route) },
+                onOpenSales = { navController.navigate(Screen.Sales.route) },
+                onOpenClients = { navController.navigate(Screen.Clients.route) },
+                onOpenProviders = { navController.navigate(Screen.Providers.route) },
+                onOpenUsers = { navController.navigate(Screen.Users.route) },
+                onOpenReports = { navController.navigate(Screen.Reports.route) },
+            )
+        }
+
+        composable(Screen.Inventory.route) {
+            FeatureScreen(
+                title = "Inventario",
+                description = "Gestion de fardos, stock, precios y edicion rapida.",
+                actionLabel = "Volver al dashboard",
+                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            )
+        }
+
+        composable(Screen.Sales.route) {
+            FeatureScreen(
+                title = "Ventas",
+                description = "Registro de ventas, deudas, cuotas y seguimiento de pagos.",
+                actionLabel = "Volver al dashboard",
+                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            )
+        }
+
+        composable(Screen.Clients.route) {
+            FeatureScreen(
+                title = "Clientes",
+                description = "Controla compradores, saldos pendientes y contacto rapido.",
+                actionLabel = "Volver al dashboard",
+                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            )
+        }
+
+        composable(Screen.Providers.route) {
+            FeatureScreen(
+                title = "Proveedores",
+                description = "Administra piloteros, origen de mercaderia y cuentas.",
+                actionLabel = "Volver al dashboard",
+                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            )
+        }
+
+        composable(Screen.Users.route) {
+            FeatureScreen(
+                title = "Usuarios",
+                description = "Roles, permisos y control de acceso por colaborador.",
+                actionLabel = "Volver al dashboard",
+                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            )
+        }
+
+        composable(Screen.Reports.route) {
+            FeatureScreen(
+                title = "Reportes",
+                description = "Resumen financiero, utilidad, pendientes y rentabilidad.",
+                actionLabel = "Volver al dashboard",
+                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
             )
         }
     }
