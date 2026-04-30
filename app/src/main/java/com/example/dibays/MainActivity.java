@@ -540,46 +540,168 @@ public class MainActivity extends AppCompatActivity {
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(SURFACE);
 
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        root.addView(scroll, fullSize());
+
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(dp(22), dp(28), dp(22), dp(28));
-        root.addView(content, fullSize());
+        content.setPadding(dp(18), dp(18), dp(18), dp(24));
+        scroll.addView(content, new ScrollView.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
 
-        content.addView(topBackRow(v -> showLoginScreen()));
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setPadding(dp(20), dp(20), dp(20), dp(20));
+        panel.setBackground(roundedStroke(Color.WHITE, BORDER, 28, 1));
+        content.addView(panel, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
 
-        TextView title = title("Cuentas", 34);
-        content.addView(title, marginTop(32));
+        panel.addView(profileHeader());
 
-        TextView subtitle = body("Selecciona o administra las cuentas de tu negocio.", 16);
-        content.addView(subtitle, marginTop(8));
+        panel.addView(profileAvatar(createdAccount), marginTop(18));
 
-        LinearLayout accountList = new LinearLayout(this);
-        accountList.setOrientation(LinearLayout.VERTICAL);
-        content.addView(accountList, marginTop(28));
+        TextView name = text(resolveAccountName(createdAccount), 22, INK, true);
+        name.setGravity(Gravity.CENTER_HORIZONTAL);
+        panel.addView(name, marginTop(14));
 
-        if (createdAccount != null) {
-            accountList.addView(accountCard(createdAccount), marginTop(10));
-        } else {
-            accountList.addView(text("Cargando cuentas...", 15, TEXT_MUTED, false));
-            loadAccounts(accountList);
-        }
+        TextView phone = text(resolveAccountPhone(createdAccount), 15, Color.rgb(172, 176, 184), false);
+        phone.setGravity(Gravity.CENTER_HORIZONTAL);
+        panel.addView(phone, marginTop(4));
+
+        TextView section = text("Account Settings", 16, Color.rgb(190, 190, 194), false);
+        panel.addView(section, marginTop(28));
+
+        panel.addView(settingsRow("Profile setting", "user", v -> Toast.makeText(this, "Perfil", Toast.LENGTH_SHORT).show()), marginTop(14));
+        panel.addView(settingsRow("Change password", "lock", v -> Toast.makeText(this, "Cambiar PIN", Toast.LENGTH_SHORT).show()), marginTop(10));
+        panel.addView(settingsRow("Chat support", "chat", v -> Toast.makeText(this, "Soporte en chat", Toast.LENGTH_SHORT).show()), marginTop(10));
+
+        View divider = new View(this);
+        divider.setBackgroundColor(Color.rgb(210, 210, 214));
+        LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(1)
+        );
+        dividerParams.setMargins(0, dp(22), 0, dp(18));
+        panel.addView(divider, dividerParams);
+
+        panel.addView(profileActionRow("Log out", PRIMARY, false, v -> {
+            activeSession = null;
+            showLoginScreen();
+        }), marginTop(0));
+        panel.addView(profileActionRow("Deactivate account", Color.rgb(255, 84, 57), true, v ->
+                Toast.makeText(this, "Accion pendiente de confirmar en backend", Toast.LENGTH_SHORT).show()), marginTop(8));
 
         setContentView(root);
     }
 
-    private View accountCard(SupabaseClient.Account account) {
-        LinearLayout accountCard = new LinearLayout(this);
-        accountCard.setOrientation(LinearLayout.VERTICAL);
-        accountCard.setPadding(dp(18), dp(18), dp(18), dp(18));
-        accountCard.setBackground(roundedStroke(Color.WHITE, BORDER, 20, 1));
+    private LinearLayout profileHeader() {
+        LinearLayout header = new LinearLayout(this);
+        header.setGravity(Gravity.CENTER_VERTICAL);
 
-        accountCard.addView(text("DIBAYS FARDOS", 13, WHATSAPP, true));
-        accountCard.addView(text(account.name == null || account.name.isEmpty() ? "Cuenta principal" : account.name, 22, INK, true), marginTop(8));
-        accountCard.addView(body("Cuenta protegida con PIN confirmado.", 14), marginTop(6));
+        TextView menu = text("≡", 24, PRIMARY, false);
+        menu.setGravity(Gravity.CENTER);
+        menu.setBackground(rounded(Color.WHITE, 18));
+        header.addView(menu, new LinearLayout.LayoutParams(dp(36), dp(36)));
+
+        TextView title = text("", 1, PRIMARY, false);
+        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
+        title.setText("My Profile");
+        title.setGravity(Gravity.CENTER);
+        header.addView(title, titleParams);
+
+        View spacerRight = new View(this);
+        header.addView(spacerRight, new LinearLayout.LayoutParams(dp(36), dp(36)));
+        return header;
+    }
+
+    private View profileAvatar(SupabaseClient.Account account) {
+        LinearLayout wrapper = new LinearLayout(this);
+        wrapper.setGravity(Gravity.CENTER_HORIZONTAL);
+        wrapper.setOrientation(LinearLayout.VERTICAL);
+
+        FrameLayout avatar = new FrameLayout(this);
+        avatar.setBackground(rounded(Color.rgb(241, 235, 255), 999));
+        LinearLayout.LayoutParams avatarParams = new LinearLayout.LayoutParams(dp(72), dp(72));
+
+        TextView icon = text("●", 28, Color.rgb(123, 75, 255), true);
+        icon.setGravity(Gravity.CENTER);
+        avatar.addView(icon, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                Gravity.CENTER
+        ));
+
+        wrapper.addView(avatar, avatarParams);
+        return wrapper;
+    }
+
+    private View settingsRow(String label, String iconType, View.OnClickListener listener) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(10), dp(10), dp(10), dp(10));
+        row.setBackground(rounded(Color.WHITE, 18));
+        row.setOnClickListener(listener);
+
+        FrameLayout iconWrap = new FrameLayout(this);
+        iconWrap.setBackground(rounded(Color.rgb(245, 238, 255), 14));
+        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dp(36), dp(36));
+
+        TextView icon = text(iconGlyph(iconType), 18, Color.rgb(123, 75, 255), true);
+        icon.setGravity(Gravity.CENTER);
+        iconWrap.addView(icon, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                Gravity.CENTER
+        ));
+        row.addView(iconWrap, iconParams);
+
+        TextView text = text(label, 15, PRIMARY, false);
+        LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
+        textParams.setMargins(dp(14), 0, dp(8), 0);
+        row.addView(text, textParams);
+
+        TextView arrow = text("›", 24, Color.rgb(176, 176, 182), false);
+        arrow.setGravity(Gravity.CENTER);
+        row.addView(arrow, new LinearLayout.LayoutParams(dp(20), dp(20)));
+        return row;
+    }
+
+    private View profileActionRow(String label, int color, boolean destructive, View.OnClickListener listener) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(0, dp(10), 0, dp(10));
+        row.setOnClickListener(listener);
+
+        TextView icon = text(destructive ? "⊘" : "↩", 18, color, true);
+        icon.setGravity(Gravity.CENTER);
+        row.addView(icon, new LinearLayout.LayoutParams(dp(24), dp(24)));
+
+        TextView labelView = text(label, 15, color, false);
+        LinearLayout.LayoutParams labelParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
+        labelParams.setMargins(dp(14), 0, 0, 0);
+        row.addView(labelView, labelParams);
+        return row;
+    }
+
+    private View accountCard(SupabaseClient.Account account) {
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(16), dp(16), dp(16), dp(16));
+        card.setBackground(roundedStroke(Color.WHITE, BORDER, 18, 1));
+
+        card.addView(text(account.name == null || account.name.isEmpty() ? "Cuenta principal" : account.name, 18, INK, true));
+        card.addView(text(resolveAccountPhone(account), 13, TEXT_MUTED, false), marginTop(6));
 
         Button enter = primaryButton("Entrar");
-        accountCard.addView(enter, marginTop(18));
-        return accountCard;
+        card.addView(enter, marginTop(14));
+        return card;
     }
 
     private LinearLayout trustRow(String title, String value) {
@@ -600,6 +722,35 @@ public class MainActivity extends AppCompatActivity {
         copy.addView(text(title, 14, INK, true));
         copy.addView(text(value, 13, TEXT_MUTED, false));
         return row;
+    }
+
+    private String resolveAccountName(SupabaseClient.Account account) {
+        if (account != null) {
+            if (account.name != null && !account.name.trim().isEmpty()) {
+                return account.name.trim();
+            }
+            if (account.phone != null && !account.phone.trim().isEmpty()) {
+                return account.phone.trim();
+            }
+        }
+        return "Karim Santel";
+    }
+
+    private String resolveAccountPhone(SupabaseClient.Account account) {
+        if (account != null && account.phone != null && !account.phone.trim().isEmpty()) {
+            return account.phone.trim();
+        }
+        return "0167873902";
+    }
+
+    private String iconGlyph(String iconType) {
+        if ("lock".equals(iconType)) {
+            return "🔒";
+        }
+        if ("chat".equals(iconType)) {
+            return "💬";
+        }
+        return "👤";
     }
 
     private LinearLayout topBackRow(View.OnClickListener listener) {
