@@ -45,6 +45,10 @@ class DashboardViewModel(
         }
     }
 
+    fun onSearchQueryChange(value: String) {
+        _uiState.update { it.copy(searchQuery = value) }
+    }
+
     companion object {
         fun factory(
             repository: DashboardRepository,

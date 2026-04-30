@@ -130,6 +130,7 @@ fun AppNavHost(
                 email = session?.email.orEmpty(),
                 state = dashboardState,
                 onRefresh = dashboardViewModel::refresh,
+                onSearchQueryChange = dashboardViewModel::onSearchQueryChange,
                 onLogout = viewModel::logout,
                 onOpenInventory = { navController.navigate(Screen.Inventory.route) },
                 onOpenSales = { navController.navigate(Screen.Sales.route) },

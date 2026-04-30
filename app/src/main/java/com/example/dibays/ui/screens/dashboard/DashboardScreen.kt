@@ -23,12 +23,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -49,13 +49,13 @@ private val HeaderBg = Color(0xFF1E2535)
 private val SurfaceBg = Color(0xFFF2F3F5)
 private val Teal = Color(0xFF2ECC9A)
 private val DrawerBg = Color(0xFF1E2535)
-private val DrawerBorder = Color(0xFF2E394E)
 
 @Composable
 fun DashboardScreen(
     email: String,
     state: DashboardUiState,
     onRefresh: () -> Unit,
+    onSearchQueryChange: (String) -> Unit,
     onLogout: () -> Unit,
     onOpenInventory: () -> Unit,
     onOpenSales: () -> Unit,
@@ -67,6 +67,12 @@ fun DashboardScreen(
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val filteredProducts = state.products.filter { product ->
+        val query = state.searchQuery.trim()
+        query.isBlank() ||
+            listOf(product.name, product.code, product.category)
+                .any { candidate -> candidate.contains(query, ignoreCase = true) }
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -78,13 +84,11 @@ fun DashboardScreen(
                 drawerContainerColor = DrawerBg,
             ) {
                 DrawerContent(
+                    activeRoute = Screen.Dashboard.route,
                     onNavigate = { route ->
-                        scope.launch {
-                            drawerState.close()
-                        }
+                        scope.launch { drawerState.close() }
                         onNavigateToRoute(route)
                     },
-                    activeRoute = Screen.Dashboard.route,
                 )
             }
         },
@@ -100,9 +104,7 @@ fun DashboardScreen(
                     .verticalScroll(rememberScrollState()),
             ) {
                 HeaderSection(
-                    onMenuClick = {
-                        scope.launch { drawerState.open() }
-                    },
+                    onMenuClick = { scope.launch { drawerState.open() } },
                     onRegisterSale = onOpenSales,
                 )
 
@@ -112,6 +114,11 @@ fun DashboardScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
+                    SearchBarCard(
+                        query = state.searchQuery,
+                        onQueryChange = onSearchQueryChange,
+                    )
+
                     MockupCard(
                         title = if (state.products.isEmpty()) {
                             "¿Empezamos por crear tu primer producto?"
@@ -125,7 +132,6 @@ fun DashboardScreen(
                         },
                         actionLabel = "+ Añadir producto",
                         onAction = onOpenInventory,
-                        illustration = { ProductIllustration() },
                     )
 
                     MockupCard(
@@ -133,8 +139,15 @@ fun DashboardScreen(
                         subtitle = "Revisa el movimiento del dia o simula una nueva venta.",
                         actionLabel = "+ Simular una venta",
                         onAction = onOpenSales,
-                        illustration = { RegisterIllustration() },
                     )
+
+                    if (state.searchQuery.isNotBlank()) {
+                        SearchResultsCard(
+                            query = state.searchQuery,
+                            products = filteredProducts,
+                            onOpenInventory = onOpenInventory,
+                        )
+                    }
 
                     state.error?.let { error ->
                         ErrorCard(error = error)
@@ -143,19 +156,16 @@ fun DashboardScreen(
                     Card(
                         shape = RoundedCornerShape(22.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
                                 text = "Usuarios activos",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF1F2937),
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = "Toca Usuarios en el menu lateral para ver colaboradores y accesos.",
-                                style = MaterialTheme.typography.bodyMedium,
                                 color = Color(0xFF6B7280),
                             )
                             Spacer(modifier = Modifier.height(10.dp))
@@ -168,24 +178,16 @@ fun DashboardScreen(
                     Card(
                         shape = RoundedCornerShape(22.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
                                 text = "Estado rapido",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF1F2937),
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Productos cargados: ${state.products.size}",
-                                color = Color(0xFF6B7280),
-                            )
-                            Text(
-                                text = "Sesion: ${email.ifBlank { "Activa" }}",
-                                color = Color(0xFF6B7280),
-                            )
+                            Text("Productos cargados: ${state.products.size}")
+                            Text("Sesion: ${email.ifBlank { "Activa" }}")
                         }
                     }
                 }
@@ -254,7 +256,7 @@ private fun HeaderSection(
                 fontWeight = FontWeight.Bold,
             )
             Spacer(modifier = Modifier.width(10.dp))
-            EyeGlyph()
+            Text(text = "◉", color = Teal, fontSize = 18.sp)
         }
 
         Spacer(modifier = Modifier.height(2.dp))
@@ -293,11 +295,85 @@ private fun HeaderSection(
 }
 
 @Composable
+private fun SearchBarCard(
+    query: String,
+    onQueryChange: (String) -> Unit,
+) {
+    Card(
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Buscar inventario",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = query,
+                onValueChange = onQueryChange,
+                singleLine = true,
+                label = { Text("Nombre, codigo o categoria") },
+            )
+        }
+    }
+}
+
+@Composable
+private fun SearchResultsCard(
+    query: String,
+    products: List<ProductSummary>,
+    onOpenInventory: () -> Unit,
+) {
+    Card(
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = if (products.isEmpty()) {
+                    "Sin resultados para \"$query\""
+                } else {
+                    "Resultados para \"$query\""
+                },
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (products.isEmpty()) {
+                Text(
+                    text = "No encontramos coincidencias en el inventario.",
+                    color = Color(0xFF6B7280),
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                OutlinedButton(onClick = onOpenInventory) {
+                    Text("Abrir inventario")
+                }
+            } else {
+                products.take(5).forEach { product ->
+                    ProductRow(product = product)
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+                if (products.size > 5) {
+                    Text(
+                        text = "Mostrando 5 de ${products.size} coincidencias.",
+                        color = Color(0xFF6B7280),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun DrawerContent(
     onNavigate: (String) -> Unit,
     activeRoute: String,
 ) {
-    val items = listOf(
+    val entries = listOf(
         DrawerEntry("Inicio", Screen.Dashboard.route, isActive = true),
         DrawerEntry("Vender", Screen.Sales.route),
         DrawerEntry("Pedidos", Screen.Orders.route, badge = "0"),
@@ -327,7 +403,7 @@ private fun DrawerContent(
         )
         Spacer(modifier = Modifier.height(18.dp))
 
-        items.forEach { item ->
+        entries.forEach { item ->
             DrawerMenuItem(
                 item = item.copy(isActive = item.route == activeRoute || item.isActive),
                 onClick = {
@@ -340,7 +416,6 @@ private fun DrawerContent(
         }
 
         Spacer(modifier = Modifier.weight(1f))
-
         BottomAccountBanner()
     }
 }
@@ -378,7 +453,12 @@ private fun DrawerMenuItem(
         item.badge?.let { badge ->
             Spacer(modifier = Modifier.width(8.dp))
             if (badge == "NUEVO") {
-                NewBadge()
+                Text(
+                    text = "NUEVO",
+                    color = Teal,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                )
             } else {
                 CounterBadge(text = badge)
             }
@@ -399,24 +479,6 @@ private fun CounterBadge(text: String) {
             text = text,
             color = Color.White,
             fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-        )
-    }
-}
-
-@Composable
-private fun NewBadge() {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(Color.Transparent)
-            .padding(horizontal = 8.dp, vertical = 1.dp)
-            .background(Color.Transparent),
-    ) {
-        Text(
-            text = "NUEVO",
-            color = Teal,
-            fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
         )
     }
@@ -459,86 +521,80 @@ private fun MockupCard(
     subtitle: String,
     actionLabel: String,
     onAction: () -> Unit,
-    illustration: @Composable () -> Unit,
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            illustration()
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1F2937),
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF6B7280),
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Button(
-                    onClick = onAction,
-                    colors = ButtonDefaults.buttonColors(containerColor = Teal, contentColor = Color.White),
-                    shape = RoundedCornerShape(14.dp),
-                ) {
-                    Text(actionLabel, fontWeight = FontWeight.SemiBold)
-                }
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = subtitle,
+                color = Color(0xFF6B7280),
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Button(
+                onClick = onAction,
+                colors = ButtonDefaults.buttonColors(containerColor = Teal, contentColor = Color.White),
+                shape = RoundedCornerShape(14.dp),
+            ) {
+                Text(actionLabel, fontWeight = FontWeight.SemiBold)
             }
         }
     }
 }
 
 @Composable
-private fun ProductIllustration() {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MiniTile("P")
-            MiniTile("G")
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MiniTile("T")
-            MiniTile("I")
-        }
-    }
-}
-
-@Composable
-private fun RegisterIllustration() {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        MiniTile("▣", tint = Color(0xFF6B7280))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MiniTile("—", tint = Color(0xFF6B7280))
-            MiniTile("—", tint = Color(0xFF6B7280))
-        }
-    }
-}
-
-@Composable
-private fun MiniTile(symbol: String, tint: Color = Teal) {
-    Box(
-        modifier = Modifier
-            .size(34.dp)
-            .clip(RoundedCornerShape(11.dp))
-            .background(Color(0xFFF6F7FA)),
-        contentAlignment = Alignment.Center,
+private fun ProductRow(product: ProductSummary) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
     ) {
-        Text(
-            text = symbol,
-            color = tint,
-            fontWeight = FontWeight.Bold,
-        )
+        Row(
+            modifier = Modifier.padding(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFFE2E8F0)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = product.category.takeIf { it.isNotBlank() }?.take(1)?.uppercase() ?: "P",
+                    color = Teal,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = product.name,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = listOfNotNull(
+                        product.code.takeIf { it.isNotBlank() },
+                        product.category.takeIf { it.isNotBlank() },
+                    ).joinToString(" · ").ifBlank { "Sin codigo ni categoria" },
+                    color = Color(0xFF6B7280),
+                    fontSize = 12.sp,
+                )
+            }
+
+            Text(
+                text = "Stock ${product.stock}",
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
     }
 }
 
@@ -578,23 +634,10 @@ private fun HamburgerIcon() {
 }
 
 @Composable
-private fun EyeGlyph() {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = "◉",
-            color = Teal,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-        )
-    }
-}
-
-@Composable
 private fun ErrorCard(error: String) {
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Text(
             text = error,

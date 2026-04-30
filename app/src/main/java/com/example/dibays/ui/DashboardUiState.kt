@@ -6,4 +6,5 @@ data class DashboardUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val products: List<ProductSummary> = emptyList(),
+    val searchQuery: String = "",
 )
