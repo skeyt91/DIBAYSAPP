@@ -32,24 +32,57 @@ create table if not exists public.productos (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.ventas (
+  id uuid primary key default gen_random_uuid(),
+  auth_user_id uuid references auth.users(id) on delete cascade,
+  cuenta_id uuid references public.cuentas(id) on delete cascade,
+  cliente_nombre text not null default 'Cliente general',
+  estado_pago text not null default 'pendiente',
+  total numeric(12,2) not null default 0,
+  pago_recibido numeric(12,2) not null default 0,
+  saldo numeric(12,2) not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.venta_items (
+  id uuid primary key default gen_random_uuid(),
+  venta_id uuid not null references public.ventas(id) on delete cascade,
+  producto_id uuid references public.productos(id) on delete set null,
+  nombre_producto text not null,
+  cantidad integer not null default 1,
+  precio_unitario numeric(12,2) not null default 0,
+  subtotal numeric(12,2) not null default 0,
+  created_at timestamptz not null default now()
+);
+
 alter table public.cuentas add column if not exists auth_user_id uuid references auth.users(id) on delete cascade;
 alter table public.usuarios add column if not exists auth_user_id uuid references auth.users(id) on delete cascade;
 alter table public.usuarios add column if not exists pin_hash text;
 alter table public.usuarios add column if not exists email text;
 alter table public.productos add column if not exists auth_user_id uuid references auth.users(id) on delete cascade;
+alter table public.ventas add column if not exists auth_user_id uuid references auth.users(id) on delete cascade;
+alter table public.ventas add column if not exists cuenta_id uuid references public.cuentas(id) on delete cascade;
+alter table public.venta_items add column if not exists venta_id uuid references public.ventas(id) on delete cascade;
+alter table public.venta_items add column if not exists producto_id uuid references public.productos(id) on delete set null;
 
 alter table public.cuentas alter column auth_user_id drop not null;
 alter table public.usuarios alter column auth_user_id drop not null;
 alter table public.productos alter column auth_user_id drop not null;
+alter table public.ventas alter column auth_user_id drop not null;
+alter table public.venta_items alter column venta_id drop not null;
 
 create index if not exists cuentas_auth_user_id_idx on public.cuentas(auth_user_id);
 create index if not exists usuarios_auth_user_id_idx on public.usuarios(auth_user_id);
 create index if not exists usuarios_email_idx on public.usuarios(lower(email));
 create index if not exists productos_auth_user_id_idx on public.productos(auth_user_id);
+create index if not exists ventas_auth_user_id_idx on public.ventas(auth_user_id);
+create index if not exists venta_items_venta_id_idx on public.venta_items(venta_id);
 
 alter table public.cuentas enable row level security;
 alter table public.usuarios enable row level security;
 alter table public.productos enable row level security;
+alter table public.ventas enable row level security;
+alter table public.venta_items enable row level security;
 
 drop policy if exists "cuentas propias select" on public.cuentas;
 drop policy if exists "cuentas propias insert" on public.cuentas;
@@ -61,6 +94,10 @@ drop policy if exists "productos propios select" on public.productos;
 drop policy if exists "productos propios insert" on public.productos;
 drop policy if exists "productos propios update" on public.productos;
 drop policy if exists "productos propios delete" on public.productos;
+drop policy if exists "ventas propias select" on public.ventas;
+drop policy if exists "ventas propias insert" on public.ventas;
+drop policy if exists "venta items propios select" on public.venta_items;
+drop policy if exists "venta items propios insert" on public.venta_items;
 
 create policy "cuentas propias select"
 on public.cuentas for select
@@ -114,3 +151,31 @@ create policy "productos propios delete"
 on public.productos for delete
 to anon, authenticated
 using (auth_user_id = auth.uid() or auth_user_id is null);
+
+create policy "ventas propias select"
+on public.ventas for select
+to anon, authenticated
+using (auth_user_id = auth.uid() or auth_user_id is null);
+
+create policy "ventas propias insert"
+on public.ventas for insert
+to anon, authenticated
+with check (auth_user_id = auth.uid() or auth_user_id is null);
+
+create policy "venta items propios select"
+on public.venta_items for select
+to anon, authenticated
+using (exists (
+  select 1 from public.ventas v
+  where v.id = venta_items.venta_id
+    and (v.auth_user_id = auth.uid() or v.auth_user_id is null)
+));
+
+create policy "venta items propios insert"
+on public.venta_items for insert
+to anon, authenticated
+with check (exists (
+  select 1 from public.ventas v
+  where v.id = venta_items.venta_id
+    and (v.auth_user_id = auth.uid() or v.auth_user_id is null)
+));

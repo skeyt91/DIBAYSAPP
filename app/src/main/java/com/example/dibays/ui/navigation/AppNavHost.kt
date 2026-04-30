@@ -25,6 +25,7 @@ import com.example.dibays.ui.RecoverViewModel
 import com.example.dibays.ui.RegisterViewModel
 import com.example.dibays.ui.screens.dashboard.DashboardScreen
 import com.example.dibays.ui.screens.inventario.InventarioRoute
+import com.example.dibays.ui.screens.ventas.VentasRoute
 import com.example.dibays.ui.screens.recover.RecoverAccountScreen
 import com.example.dibays.ui.screens.shared.FeatureScreen
 import com.example.dibays.ui.screens.register.RegisterScreen
@@ -149,11 +150,12 @@ fun AppNavHost(
         }
 
         composable(Screen.Sales.route) {
-            FeatureScreen(
-                title = "Ventas",
-                description = "Registro de ventas, deudas, cuotas y seguimiento de pagos.",
-                actionLabel = "Volver al dashboard",
-                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            val session = uiState.session
+            VentasRoute(
+                onBackToDashboard = {
+                    navController.popBackStack(Screen.Dashboard.route, inclusive = false)
+                },
+                accessToken = session?.accessToken.orEmpty(),
             )
         }
 
