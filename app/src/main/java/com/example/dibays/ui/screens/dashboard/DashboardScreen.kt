@@ -17,8 +17,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -41,6 +41,9 @@ fun DashboardScreen(
     onRefresh: () -> Unit,
     onLogout: () -> Unit,
 ) {
+    val lowStock = state.products.filter { it.stock in 1..5 }
+    val totalInventoryValue = state.products.sumOf { it.stock * it.price }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -54,13 +57,13 @@ fun DashboardScreen(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Dashboard",
+                    text = "DIBAYS Dashboard",
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = email,
+                    text = email.ifBlank { "Sesion activa" },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -72,25 +75,71 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard(
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        ) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                Text(
+                    text = "Resumen operativo",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Controla inventario, ventas y alertas desde un solo panel.",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    DashboardAction(
+                        label = "Nueva venta",
+                        modifier = Modifier.weight(1f),
+                        onClick = { },
+                    )
+                    DashboardAction(
+                        label = "Nuevo producto",
+                        modifier = Modifier.weight(1f),
+                        onClick = { },
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            MetricCard(
                 title = "Productos",
                 value = state.products.size.toString(),
                 modifier = Modifier.weight(1f),
             )
-            StatCard(
-                title = "Stock bajo",
-                value = state.products.count { it.stock in 1..5 }.toString(),
+            MetricCard(
+                title = "Bajo stock",
+                value = lowStock.size.toString(),
                 modifier = Modifier.weight(1f),
             )
-            StatCard(
-                title = "Sin stock",
+            MetricCard(
+                title = "Agotados",
                 value = state.products.count { it.stock <= 0 }.toString(),
                 modifier = Modifier.weight(1f),
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+
+        MetricCard(
+            title = "Valor estimado",
+            value = "Bs ${totalInventoryValue.formatMoney()}",
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         if (state.isLoading) {
             Box(
@@ -105,11 +154,7 @@ fun DashboardScreen(
         }
 
         state.error?.let { error ->
-            Text(
-                text = error,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium,
-            )
+            ErrorCard(error = error)
             Spacer(modifier = Modifier.height(12.dp))
         }
 
@@ -117,18 +162,56 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            contentPadding = PaddingValues(bottom = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            contentPadding = PaddingValues(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(state.products) { product ->
-                ProductRow(product)
+            item {
+                SectionTitle(
+                    title = "Alerta de stock",
+                    subtitle = "Productos que requieren reposicion inmediata.",
+                )
+            }
+
+            if (lowStock.isEmpty()) {
+                item {
+                    EmptyStateCard(
+                        title = "Sin alertas",
+                        subtitle = "No hay productos con stock bajo en este momento.",
+                    )
+                }
+            } else {
+                items(lowStock) { product ->
+                    ProductRow(product = product, lowStock = true)
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(4.dp))
+                SectionTitle(
+                    title = "Catalogo reciente",
+                    subtitle = "Ultimos productos cargados en Supabase.",
+                )
+            }
+
+            if (state.products.isEmpty()) {
+                item {
+                    EmptyStateCard(
+                        title = "Sin productos",
+                        subtitle = "Crea tu primer producto para comenzar a ver el dashboard.",
+                    )
+                }
+            } else {
+                items(state.products) { product ->
+                    ProductRow(product = product, lowStock = product.stock in 1..5)
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Button(
             modifier = Modifier.fillMaxWidth(),
             onClick = onLogout,
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
         ) {
             Text("Cerrar sesión")
         }
@@ -136,7 +219,21 @@ fun DashboardScreen(
 }
 
 @Composable
-private fun StatCard(
+private fun DashboardAction(
+    label: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    OutlinedButton(
+        modifier = modifier,
+        onClick = onClick,
+    ) {
+        Text(label)
+    }
+}
+
+@Composable
+private fun MetricCard(
     title: String,
     value: String,
     modifier: Modifier = Modifier,
@@ -155,15 +252,76 @@ private fun StatCard(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = value,
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onBackground,
+                fontWeight = FontWeight.SemiBold,
             )
         }
     }
 }
 
 @Composable
-private fun ProductRow(product: ProductSummary) {
+private fun ErrorCard(error: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+    ) {
+        Text(
+            text = error,
+            modifier = Modifier.padding(14.dp),
+            color = MaterialTheme.colorScheme.onErrorContainer,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
+}
+
+@Composable
+private fun SectionTitle(title: String, subtitle: String) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.SemiBold,
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun EmptyStateCard(title: String, subtitle: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProductRow(
+    product: ProductSummary,
+    lowStock: Boolean,
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -176,8 +334,8 @@ private fun ProductRow(product: ProductSummary) {
         ) {
             Box(
                 modifier = Modifier
-                    .width(42.dp)
-                    .height(42.dp)
+                    .width(44.dp)
+                    .height(44.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center,
@@ -202,6 +360,7 @@ private fun ProductRow(product: ProductSummary) {
                     text = buildList {
                         product.code.takeIf { it.isNotBlank() }?.let { add(it) }
                         add("Stock ${product.stock}")
+                        product.category.takeIf { it.isNotBlank() }?.let { add(it) }
                     }.joinToString(" • "),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -210,17 +369,31 @@ private fun ProductRow(product: ProductSummary) {
 
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "Bs ${product.price}",
+                    text = "Bs ${product.price.formatMoney()}",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
                 Text(
-                    text = if (product.stock <= 0) "Agotado" else "Disponible",
+                    text = when {
+                        product.stock <= 0 -> "Agotado"
+                        lowStock -> "Stock bajo"
+                        else -> "Disponible"
+                    },
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (product.stock <= 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    color = when {
+                        product.stock <= 0 -> MaterialTheme.colorScheme.error
+                        lowStock -> MaterialTheme.colorScheme.tertiary
+                        else -> MaterialTheme.colorScheme.primary
+                    },
                 )
             }
         }
     }
+}
+
+private fun Double.formatMoney(): String = if (this % 1.0 == 0.0) {
+    toLong().toString()
+} else {
+    String.format("%.2f", this)
 }
