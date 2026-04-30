@@ -2,6 +2,20 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
+import java.util.Properties
+
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        file.inputStream().use { load(it) }
+    }
+}
+
+fun buildConfigString(name: String): String {
+    val value = localProperties.getProperty(name, "")
+    return "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
+}
+
 android {
     namespace = "com.example.dibays"
     compileSdk {
@@ -18,6 +32,13 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "SUPABASE_URL", buildConfigString("supabase.url"))
+        buildConfigField("String", "SUPABASE_ANON_KEY", buildConfigString("supabase.anonKey"))
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {

@@ -22,6 +22,7 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
@@ -377,7 +378,7 @@ public class MainActivity extends AppCompatActivity {
                 updateRegisterState(true);
                 return;
             }
-            showAccountsScreen();
+            registerWithSupabase();
         });
         FrameLayout.LayoutParams bottomButtonParams = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -649,6 +650,30 @@ public class MainActivity extends AppCompatActivity {
                 && termsCheckBox != null
                 && !phoneInput.getText().toString().trim().isEmpty()
                 && termsCheckBox.isChecked();
+    }
+
+    private void registerWithSupabase() {
+        String phone = phoneInput.getText().toString().trim();
+        String countryCode = selectedCountry.dialCode;
+        continueButton.setEnabled(false);
+        continueButton.setText("Conectando...");
+
+        new Thread(() -> {
+            try {
+                new SupabaseClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                        .registerUser(phone, countryCode);
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Cuenta conectada con Supabase", Toast.LENGTH_SHORT).show();
+                    showAccountsScreen();
+                });
+            } catch (Exception exception) {
+                runOnUiThread(() -> {
+                    continueButton.setText("Continuar");
+                    updateRegisterState(false);
+                    Toast.makeText(this, "No se pudo conectar: " + exception.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
     }
 
     private TextView title(String value, int size) {
