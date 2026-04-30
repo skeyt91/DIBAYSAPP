@@ -8,12 +8,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.dibays.BuildConfig
+import com.example.dibays.data.dashboard.DashboardRepository
+import com.example.dibays.ui.DashboardViewModel
 import com.example.dibays.ui.LoginViewModel
 import com.example.dibays.ui.screens.dashboard.DashboardScreen
 import com.example.dibays.ui.screens.login.LoginScreen
@@ -59,8 +63,26 @@ fun AppNavHost(viewModel: LoginViewModel) {
         }
 
         composable(ROUTE_DASHBOARD) {
+            val session = uiState.session
+            val dashboardRepository = remember {
+                DashboardRepository(
+                    supabaseUrl = BuildConfig.SUPABASE_URL,
+                    anonKey = BuildConfig.SUPABASE_ANON_KEY,
+                )
+            }
+            val dashboardViewModel: DashboardViewModel = viewModel(
+                key = session?.accessToken ?: "dashboard",
+                factory = DashboardViewModel.factory(
+                    repository = dashboardRepository,
+                    accessToken = session?.accessToken.orEmpty(),
+                ),
+            )
+            val dashboardState by dashboardViewModel.uiState.collectAsState()
+
             DashboardScreen(
-                email = uiState.session?.email.orEmpty(),
+                email = session?.email.orEmpty(),
+                state = dashboardState,
+                onRefresh = dashboardViewModel::refresh,
                 onLogout = viewModel::logout,
             )
         }
