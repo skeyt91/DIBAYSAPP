@@ -362,12 +362,12 @@ public class MainActivity extends AppCompatActivity {
         boolean wide = getResources().getConfiguration().screenWidthDp >= 720;
         LinearLayout shell = new LinearLayout(this);
         shell.setOrientation(wide ? LinearLayout.HORIZONTAL : LinearLayout.VERTICAL);
-        shell.setGravity(wide ? Gravity.CENTER : Gravity.TOP);
+        shell.setGravity(wide ? Gravity.CENTER_VERTICAL : Gravity.TOP);
         shell.setPadding(
-                wide ? dp(44) : dp(22),
-                wide ? dp(34) : dp(26),
-                wide ? dp(44) : dp(22),
-                wide ? dp(34) : dp(34)
+                wide ? dp(56) : dp(22),
+                wide ? dp(44) : dp(28),
+                wide ? dp(56) : dp(22),
+                wide ? dp(40) : dp(28)
         );
         scroll.addView(shell, new ScrollView.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -376,40 +376,34 @@ public class MainActivity extends AppCompatActivity {
 
         LinearLayout brandPanel = new LinearLayout(this);
         brandPanel.setOrientation(LinearLayout.VERTICAL);
-        brandPanel.setPadding(wide ? dp(30) : 0, wide ? dp(30) : 0, wide ? dp(30) : 0, wide ? dp(30) : dp(18));
+        brandPanel.setPadding(0, 0, wide ? dp(38) : 0, 0);
         brandPanel.setGravity(Gravity.CENTER_VERTICAL);
-        if (wide) {
-            brandPanel.setBackground(roundedStroke(Color.WHITE, BORDER, 24, 1));
-        }
 
-        TextView eyebrow = text("DIBAYS FARDOS", 12, WHATSAPP, true);
-        eyebrow.setLetterSpacing(0.08f);
-        eyebrow.setGravity(wide ? Gravity.START : Gravity.CENTER);
+        TextView eyebrow = text("DIBAYS FARDOS", 12, Color.rgb(126, 132, 145), true);
+        eyebrow.setLetterSpacing(0.12f);
+        eyebrow.setGravity(Gravity.START);
         brandPanel.addView(eyebrow);
 
-        TextView headline = text(wide ? "Ingreso seguro para tu negocio" : "Hola de nuevo", wide ? 34 : 36, INK, true);
-        headline.setLineSpacing(dp(3), 1.0f);
-        headline.setGravity(wide ? Gravity.START : Gravity.CENTER);
-        brandPanel.addView(headline, marginTop(8));
+        TextView headline = text("Tu cuenta segura", wide ? 44 : 38, Color.rgb(119, 86, 255), true);
+        headline.setLineSpacing(dp(2), 0.95f);
+        headline.setGravity(Gravity.START);
+        brandPanel.addView(headline, marginTop(10));
 
-        TextView summary = body(wide
-                ? "Gestiona inventario, ventas y deudas con una experiencia limpia, rapida y protegida."
-                : "Entra a tu cuenta para seguir administrando tus fardos.", wide ? 16 : 15);
-        summary.setGravity(wide ? Gravity.START : Gravity.CENTER);
-        brandPanel.addView(summary, marginTop(12));
+        TextView summary = body("Acceso limpio y rapido para administrar cuentas, ventas e inventario con estilo bancario.", 16);
+        summary.setGravity(Gravity.START);
+        brandPanel.addView(summary, marginTop(14));
+
+        brandPanel.addView(featureLine("Registro protegido", "PIN confirmado y datos ordenados"), marginTop(28));
+        brandPanel.addView(featureLine("Acceso rapido", "Continua en segundos"), marginTop(10));
+        brandPanel.addView(featureLine("Diseño limpio", "Espacio blanco y jerarquia clara"), marginTop(10));
 
         LoginIllustrationView financePanel = new LoginIllustrationView(this);
         LinearLayout.LayoutParams financeParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                wide ? dp(300) : dp(170)
+                wide ? dp(360) : dp(220)
         );
-        financeParams.setMargins(0, wide ? dp(28) : dp(20), 0, wide ? dp(24) : dp(0));
+        financeParams.setMargins(0, wide ? dp(30) : dp(24), 0, wide ? dp(12) : dp(0));
         brandPanel.addView(financePanel, financeParams);
-
-        if (wide) {
-            brandPanel.addView(trustRow("Control diario", "Ventas, deudas e inventario"));
-            brandPanel.addView(trustRow("Acceso rapido", "Con numero de celular"));
-        }
 
         LinearLayout.LayoutParams brandParams = new LinearLayout.LayoutParams(
                 wide ? 0 : ViewGroup.LayoutParams.MATCH_PARENT,
@@ -417,35 +411,36 @@ public class MainActivity extends AppCompatActivity {
                 wide ? 1.05f : 0
         );
         if (wide) {
-            brandParams.setMargins(0, 0, dp(22), 0);
+            brandParams.setMargins(0, 0, dp(28), 0);
         }
         shell.addView(brandPanel, brandParams);
 
         LinearLayout loginPanel = new LinearLayout(this);
         loginPanel.setOrientation(LinearLayout.VERTICAL);
-        loginPanel.setPadding(dp(24), wide ? dp(26) : dp(24), dp(24), dp(24));
-        loginPanel.setBackground(roundedStroke(wide ? Color.WHITE : SURFACE, BORDER, 24, 1));
+        loginPanel.setPadding(dp(24), wide ? dp(26) : dp(18), dp(24), dp(24));
+        loginPanel.setBackground(roundedStroke(Color.WHITE, BORDER, 24, 1));
 
         loginPanel.addView(topBackRow(v -> showWelcomeScreen()));
 
-        TextView title = title("Elige como ingresar", wide ? 32 : 26);
+        TextView title = text("Elige cómo ingresar", wide ? 28 : 26, INK, true);
+        title.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         loginPanel.addView(title, marginTop(24));
 
-        TextView subtitle = body("Usa tu numero celular para recibir un codigo seguro.", 15);
+        TextView subtitle = body("Usa tu numero celular para continuar con una verificacion segura.", 15);
         loginPanel.addView(subtitle, marginTop(8));
 
         LinearLayout secureNotice = new LinearLayout(this);
         secureNotice.setOrientation(LinearLayout.HORIZONTAL);
         secureNotice.setGravity(Gravity.CENTER_VERTICAL);
         secureNotice.setPadding(dp(14), dp(13), dp(14), dp(13));
-        secureNotice.setBackground(roundedStroke(SUCCESS_SOFT, Color.rgb(190, 226, 209), 16, 1));
+        secureNotice.setBackground(roundedStroke(Color.rgb(246, 247, 250), BORDER, 16, 1));
 
-        TextView secureIcon = text("OK", 11, WHATSAPP, true);
+        TextView secureIcon = text("•", 20, Color.rgb(119, 86, 255), true);
         secureIcon.setGravity(Gravity.CENTER);
         secureIcon.setBackground(rounded(Color.WHITE, 10));
         secureNotice.addView(secureIcon, new LinearLayout.LayoutParams(dp(34), dp(28)));
 
-        TextView secureText = text("Acceso protegido con verificacion por SMS.", 14, Color.rgb(38, 92, 68), false);
+        TextView secureText = text("Acceso protegido con PIN confirmado y datos guardados en Supabase.", 14, TEXT_MUTED, false);
         LinearLayout.LayoutParams secureTextParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
         secureTextParams.setMargins(dp(12), 0, 0, 0);
         secureNotice.addView(secureText, secureTextParams);
@@ -473,7 +468,7 @@ public class MainActivity extends AppCompatActivity {
         dividerParams.setMargins(0, dp(24), 0, dp(18));
         loginPanel.addView(divider, dividerParams);
 
-        TextView footer = text("Soporte disponible si no puedes acceder.", 13, TEXT_MUTED, false);
+        TextView footer = text("Soporte disponible si no puedes acceder.", 13, Color.rgb(142, 151, 160), false);
         footer.setGravity(Gravity.CENTER);
         loginPanel.addView(footer);
 
@@ -800,6 +795,26 @@ public class MainActivity extends AppCompatActivity {
 
         copy.addView(text(title, 14, INK, true));
         copy.addView(text(value, 13, TEXT_MUTED, false));
+        return row;
+    }
+
+    private LinearLayout featureLine(String title, String value) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+
+        View marker = new View(this);
+        marker.setBackground(rounded(Color.rgb(119, 86, 255), 6));
+        row.addView(marker, new LinearLayout.LayoutParams(dp(12), dp(12)));
+
+        LinearLayout textBlock = new LinearLayout(this);
+        textBlock.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams blockParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
+        blockParams.setMargins(dp(12), 0, 0, 0);
+        row.addView(textBlock, blockParams);
+
+        textBlock.addView(text(title, 15, INK, true));
+        textBlock.addView(text(value, 13, TEXT_MUTED, false));
         return row;
     }
 
@@ -1232,40 +1247,45 @@ public class MainActivity extends AppCompatActivity {
             super.onDraw(canvas);
             float w = getWidth();
             float h = getHeight();
-            float radius = Math.min(w, h) * 0.08f;
-
             paint.setStyle(Paint.Style.FILL);
-            paint.setColor(SURFACE);
-            canvas.drawRoundRect(new RectF(0, 0, w, h), radius, radius, paint);
-
             paint.setColor(Color.WHITE);
-            RectF dashboard = new RectF(w * 0.08f, h * 0.12f, w * 0.92f, h * 0.88f);
-            canvas.drawRoundRect(dashboard, 30, 30, paint);
+            canvas.drawRoundRect(new RectF(w * 0.08f, h * 0.04f, w * 0.72f, h * 0.96f), 34, 34, paint);
+            canvas.drawRoundRect(new RectF(w * 0.58f, h * 0.16f, w * 0.92f, h * 0.84f), 34, 34, paint);
+            canvas.drawRoundRect(new RectF(w * 0.78f, h * 0.16f, w * 0.98f, h * 0.84f), 34, 34, paint);
 
-            paint.setColor(PRIMARY);
+            paint.setColor(Color.rgb(240, 242, 247));
             paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeWidth(3);
-            canvas.drawRoundRect(dashboard, 30, 30, paint);
+            paint.setStrokeWidth(2);
+            canvas.drawRoundRect(new RectF(w * 0.08f, h * 0.04f, w * 0.72f, h * 0.96f), 34, 34, paint);
+            canvas.drawRoundRect(new RectF(w * 0.58f, h * 0.16f, w * 0.92f, h * 0.84f), 34, 34, paint);
+            canvas.drawRoundRect(new RectF(w * 0.78f, h * 0.16f, w * 0.98f, h * 0.84f), 34, 34, paint);
 
             paint.setStyle(Paint.Style.FILL);
-            paint.setColor(PRIMARY);
-            canvas.drawRoundRect(new RectF(w * 0.14f, h * 0.20f, w * 0.38f, h * 0.26f), 8, 8, paint);
+            paint.setColor(Color.rgb(245, 246, 250));
+            canvas.drawRect(w * 0.13f, h * 0.12f, w * 0.67f, h * 0.16f, paint);
+            canvas.drawRect(w * 0.13f, h * 0.20f, w * 0.52f, h * 0.23f, paint);
+            canvas.drawRect(w * 0.13f, h * 0.29f, w * 0.60f, h * 0.32f, paint);
+            canvas.drawRect(w * 0.13f, h * 0.38f, w * 0.48f, h * 0.41f, paint);
 
-            paint.setColor(Color.rgb(214, 222, 230));
-            canvas.drawRoundRect(new RectF(w * 0.14f, h * 0.34f, w * 0.86f, h * 0.37f), 5, 5, paint);
-            canvas.drawRoundRect(new RectF(w * 0.14f, h * 0.47f, w * 0.76f, h * 0.50f), 5, 5, paint);
-            canvas.drawRoundRect(new RectF(w * 0.14f, h * 0.60f, w * 0.82f, h * 0.63f), 5, 5, paint);
+            paint.setColor(Color.rgb(119, 86, 255));
+            canvas.drawRoundRect(new RectF(w * 0.13f, h * 0.50f, w * 0.58f, h * 0.57f), 16, 16, paint);
+            paint.setColor(Color.rgb(231, 224, 255));
+            canvas.drawRoundRect(new RectF(w * 0.13f, h * 0.63f, w * 0.45f, h * 0.67f), 10, 10, paint);
 
-            paint.setColor(WHATSAPP);
-            canvas.drawRoundRect(new RectF(w * 0.14f, h * 0.73f, w * 0.48f, h * 0.80f), 14, 14, paint);
+            paint.setColor(Color.rgb(229, 229, 235));
+            canvas.drawCircle(w * 0.21f, h * 0.76f, w * 0.028f, paint);
+            canvas.drawCircle(w * 0.31f, h * 0.76f, w * 0.028f, paint);
+            canvas.drawCircle(w * 0.41f, h * 0.76f, w * 0.028f, paint);
 
-            paint.setColor(PRIMARY);
-            canvas.drawCircle(w * 0.78f, h * 0.24f, w * 0.055f, paint);
+            paint.setColor(Color.rgb(245, 246, 250));
+            canvas.drawRect(w * 0.62f, h * 0.24f, w * 0.88f, h * 0.28f, paint);
+            canvas.drawRect(w * 0.62f, h * 0.34f, w * 0.84f, h * 0.37f, paint);
+            canvas.drawRect(w * 0.62f, h * 0.44f, w * 0.82f, h * 0.47f, paint);
+            canvas.drawRect(w * 0.62f, h * 0.54f, w * 0.90f, h * 0.57f, paint);
+            canvas.drawRoundRect(new RectF(w * 0.62f, h * 0.66f, w * 0.87f, h * 0.74f), 18, 18, paint);
 
-            paint.setColor(SUCCESS_SOFT);
-            canvas.drawRoundRect(new RectF(w * 0.56f, h * 0.68f, w * 0.86f, h * 0.82f), 18, 18, paint);
-            paint.setColor(WHATSAPP);
-            canvas.drawRoundRect(new RectF(w * 0.61f, h * 0.73f, w * 0.82f, h * 0.76f), 8, 8, paint);
+            paint.setColor(Color.rgb(119, 86, 255));
+            canvas.drawCircle(w * 0.90f, h * 0.12f, w * 0.04f, paint);
         }
     }
 
