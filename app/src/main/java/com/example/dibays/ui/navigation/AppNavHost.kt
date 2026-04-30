@@ -25,6 +25,7 @@ import com.example.dibays.ui.RecoverViewModel
 import com.example.dibays.ui.RegisterViewModel
 import com.example.dibays.ui.screens.dashboard.DashboardScreen
 import com.example.dibays.ui.screens.inventario.InventarioRoute
+import com.example.dibays.ui.screens.usuarios.UsuariosRoute
 import com.example.dibays.ui.screens.ventas.VentasRoute
 import com.example.dibays.ui.screens.recover.RecoverAccountScreen
 import com.example.dibays.ui.screens.shared.FeatureScreen
@@ -178,11 +179,12 @@ fun AppNavHost(
         }
 
         composable(Screen.Users.route) {
-            FeatureScreen(
-                title = "Usuarios",
-                description = "Roles, permisos y control de acceso por colaborador.",
-                actionLabel = "Volver al dashboard",
-                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            val session = uiState.session
+            UsuariosRoute(
+                onBackToDashboard = {
+                    navController.popBackStack(Screen.Dashboard.route, inclusive = false)
+                },
+                accessToken = session?.accessToken.orEmpty(),
             )
         }
 
