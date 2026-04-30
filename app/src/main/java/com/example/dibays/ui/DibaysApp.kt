@@ -25,6 +25,10 @@ fun DibaysApp() {
     )
 
     DibaysTheme {
-        AppNavHost(loginViewModel)
+        AppNavHost(
+            viewModel = loginViewModel,
+            sessionStore = sessionStore,
+            authRepository = authRepository,
+        )
     }
 }

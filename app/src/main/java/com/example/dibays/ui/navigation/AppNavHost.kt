@@ -16,18 +16,30 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.dibays.BuildConfig
+import com.example.dibays.data.auth.AuthRepository
 import com.example.dibays.data.dashboard.DashboardRepository
+import com.example.dibays.data.session.SessionStore
 import com.example.dibays.ui.DashboardViewModel
 import com.example.dibays.ui.LoginViewModel
+import com.example.dibays.ui.RecoverViewModel
+import com.example.dibays.ui.RegisterViewModel
 import com.example.dibays.ui.screens.dashboard.DashboardScreen
+import com.example.dibays.ui.screens.recover.RecoverAccountScreen
+import com.example.dibays.ui.screens.register.RegisterScreen
 import com.example.dibays.ui.screens.login.LoginScreen
 
 private const val ROUTE_LOADING = "loading"
 private const val ROUTE_LOGIN = "login"
+private const val ROUTE_RECOVER_ACCOUNT = "recover_account"
+private const val ROUTE_REGISTER_ACCOUNT = "register_account"
 private const val ROUTE_DASHBOARD = "dashboard"
 
 @Composable
-fun AppNavHost(viewModel: LoginViewModel) {
+fun AppNavHost(
+    viewModel: LoginViewModel,
+    sessionStore: SessionStore,
+    authRepository: AuthRepository,
+) {
     val navController = rememberNavController()
     val uiState by viewModel.uiState.collectAsState()
 
@@ -59,6 +71,43 @@ fun AppNavHost(viewModel: LoginViewModel) {
                 onEmailChange = viewModel::onEmailChange,
                 onPinChange = viewModel::onPinChange,
                 onSubmit = viewModel::login,
+                onRecoverAccount = { navController.navigate(ROUTE_RECOVER_ACCOUNT) },
+                onRegister = { navController.navigate(ROUTE_REGISTER_ACCOUNT) },
+            )
+        }
+
+        composable(ROUTE_RECOVER_ACCOUNT) {
+            val recoverViewModel: RecoverViewModel = viewModel(
+                factory = RecoverViewModel.factory(authRepository),
+            )
+            val recoverState by recoverViewModel.uiState.collectAsState()
+
+            RecoverAccountScreen(
+                state = recoverState,
+                onEmailChange = recoverViewModel::onEmailChange,
+                onSubmit = recoverViewModel::sendRecoveryEmail,
+                onBackToLogin = {
+                    navController.popBackStack(ROUTE_LOGIN, inclusive = false)
+                },
+            )
+        }
+
+        composable(ROUTE_REGISTER_ACCOUNT) {
+            val registerViewModel: RegisterViewModel = viewModel(
+                factory = RegisterViewModel.factory(authRepository, sessionStore),
+            )
+            val registerState by registerViewModel.uiState.collectAsState()
+
+            RegisterScreen(
+                state = registerState,
+                onNameChange = registerViewModel::onNameChange,
+                onEmailChange = registerViewModel::onEmailChange,
+                onPinChange = registerViewModel::onPinChange,
+                onConfirmPinChange = registerViewModel::onConfirmPinChange,
+                onSubmit = registerViewModel::register,
+                onBackToLogin = {
+                    navController.popBackStack(ROUTE_LOGIN, inclusive = false)
+                },
             )
         }
 

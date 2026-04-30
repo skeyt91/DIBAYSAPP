@@ -1,11 +1,10 @@
-package com.example.dibays.ui.screens.login
+package com.example.dibays.ui.screens.register
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,23 +20,23 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.dibays.ui.LoginUiState
+import com.example.dibays.ui.RegisterUiState
 
 @Composable
-fun LoginScreen(
-    state: LoginUiState,
+fun RegisterScreen(
+    state: RegisterUiState,
+    onNameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPinChange: (String) -> Unit,
+    onConfirmPinChange: (String) -> Unit,
     onSubmit: () -> Unit,
-    onRecoverAccount: () -> Unit,
-    onRegister: () -> Unit,
+    onBackToLogin: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -51,22 +50,15 @@ fun LoginScreen(
                 .fillMaxWidth()
                 .widthIn(max = 420.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.Center,
         ) {
             Text(
-                text = "DIBAYS",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "Acceso seguro",
+                text = "Crear cuenta",
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Ingresa con correo y PIN de 4 digitos para continuar.",
+                text = "Registra una cuenta nueva con nombre, correo y PIN de 4 digitos.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -78,6 +70,14 @@ fun LoginScreen(
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = state.name,
+                        onValueChange = onNameChange,
+                        singleLine = true,
+                        label = { Text("Nombre de la cuenta") },
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
                         value = state.email,
@@ -100,6 +100,19 @@ fun LoginScreen(
                             keyboardType = KeyboardType.NumberPassword,
                         ),
                     )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = state.confirmPin,
+                        onValueChange = onConfirmPinChange,
+                        singleLine = true,
+                        label = { Text("Confirmar PIN") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = KeyboardType.NumberPassword,
+                        ),
+                    )
+
                     if (state.error != null) {
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
@@ -108,6 +121,15 @@ fun LoginScreen(
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
+                    if (state.successMessage != null) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = state.successMessage,
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(18.dp))
                     Button(
                         modifier = Modifier.fillMaxWidth(),
@@ -115,30 +137,19 @@ fun LoginScreen(
                         contentPadding = PaddingValues(vertical = 14.dp),
                         onClick = onSubmit,
                     ) {
-                        Text(if (state.isLoading) "Conectando..." else "Entrar")
+                        Text(if (state.isLoading) "Creando..." else "Crear cuenta")
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row(
+                    Button(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        enabled = !state.isLoading,
+                        onClick = onBackToLogin,
                     ) {
-                        TextButton(onClick = onRecoverAccount) {
-                            Text("Recuperar cuenta")
-                        }
-                        TextButton(onClick = onRegister) {
-                            Text("Registrarse")
-                        }
+                        Text("Volver al login")
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = "La recuperacion y la biometria quedan listas en la siguiente fase.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }
