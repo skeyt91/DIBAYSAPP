@@ -25,6 +25,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+
 public class MainActivity extends AppCompatActivity {
     private static final int PRIMARY = Color.rgb(20, 35, 49);
     private static final int WHATSAPP = Color.rgb(22, 161, 99);
@@ -36,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int INK = Color.rgb(12, 22, 32);
     private static final int SUCCESS_SOFT = Color.rgb(226, 244, 236);
 
+    private EditText nameInput;
+    private EditText pinInput;
     private EditText phoneInput;
     private CheckBox termsCheckBox;
     private Button continueButton;
@@ -279,8 +284,8 @@ public class MainActivity extends AppCompatActivity {
         start.setOnClickListener(v -> showRegisterScreen());
         card.addView(start, marginTop(26));
 
-        Button login = outlineButton("Ya tengo una cuenta");
-        login.setOnClickListener(v -> showLoginScreen());
+        Button login = outlineButton("Registrar nombre y PIN");
+        login.setOnClickListener(v -> showRegisterScreen());
         card.addView(login, marginTop(12));
 
         setContentView(root);
@@ -301,12 +306,18 @@ public class MainActivity extends AppCompatActivity {
         content.addView(topBackRow(v -> showWelcomeScreen()));
         content.addView(progressBar());
 
-        TextView title = title("Tu informacion siempre segura", 28);
+        TextView title = title("Crea tu cuenta segura", 28);
         content.addView(title, marginTop(42));
-        content.addView(body("Accede con tu numero de celular, sin contrasenas complicadas.", 16), marginTop(12));
+        content.addView(body("Registra tu nombre, un PIN y tu numero de celular para proteger tu cuenta.", 16), marginTop(12));
+
+        nameInput = registerInput("Nombre completo *", android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
+        content.addView(nameInput, marginTop(30));
+
+        pinInput = registerInput("Crea tu PIN *", android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        content.addView(pinInput, marginTop(10));
 
         TextView label = label("Ingresa tu celular *");
-        content.addView(label, marginTop(36));
+        content.addView(label, marginTop(22));
 
         phoneFieldContainer = new LinearLayout(this);
         phoneFieldContainer.setOrientation(LinearLayout.HORIZONTAL);
@@ -532,7 +543,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(root);
     }
 
-    private void showOtpScreen(String phone, String countryCode) {
+    private void showOtpScreen(String name, String pinHash, String phone, String countryCode) {
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(Color.WHITE);
 
@@ -568,7 +579,7 @@ public class MainActivity extends AppCompatActivity {
                 otpInput.setBackground(roundedStroke(Color.WHITE, ERROR, 18, 2));
                 return;
             }
-            verifyOtp(phone, countryCode, token, verify);
+            verifyOtp(name, pinHash, phone, countryCode, token, verify);
         });
 
         setContentView(root);
@@ -684,12 +695,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateRegisterState(boolean showErrors) {
-        if (phoneInput == null || termsCheckBox == null || continueButton == null) {
+        if (nameInput == null || pinInput == null || phoneInput == null || termsCheckBox == null || continueButton == null) {
             return;
         }
 
+        boolean hasName = !nameInput.getText().toString().trim().isEmpty();
+        boolean hasPin = pinInput.getText().toString().trim().length() >= 4;
         boolean hasPhone = !phoneInput.getText().toString().trim().isEmpty();
         boolean valid = isRegisterValid();
+        nameInput.setBackground(roundedStroke(Color.WHITE, showErrors && !hasName ? ERROR : BORDER, 18, showErrors && !hasName ? 2 : 1));
+        pinInput.setBackground(roundedStroke(Color.WHITE, showErrors && !hasPin ? ERROR : BORDER, 18, showErrors && !hasPin ? 2 : 1));
         int stroke = showErrors && !hasPhone ? ERROR : BORDER;
         phoneFieldContainer.setBackground(roundedStroke(Color.WHITE, stroke, 18, showErrors && !hasPhone ? 2 : 1));
 
@@ -704,13 +719,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isRegisterValid() {
-        return phoneInput != null
+        return nameInput != null
+                && pinInput != null
+                && phoneInput != null
                 && termsCheckBox != null
+                && !nameInput.getText().toString().trim().isEmpty()
+                && pinInput.getText().toString().trim().length() >= 4
                 && !phoneInput.getText().toString().trim().isEmpty()
                 && termsCheckBox.isChecked();
     }
 
     private void requestOtp() {
+        String name = nameInput.getText().toString().trim();
+        String pinHash = hashPin(pinInput.getText().toString().trim());
         String phone = phoneInput.getText().toString().trim();
         String countryCode = selectedCountry.dialCode;
         String fullPhone = countryCode + phone;
@@ -723,7 +744,7 @@ public class MainActivity extends AppCompatActivity {
                         .requestPhoneOtp(fullPhone);
                 runOnUiThread(() -> {
                     Toast.makeText(this, "Codigo enviado por SMS", Toast.LENGTH_SHORT).show();
-                    showOtpScreen(phone, countryCode);
+                    showOtpScreen(name, pinHash, phone, countryCode);
                 });
             } catch (Exception exception) {
                 runOnUiThread(() -> {
@@ -735,7 +756,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    private void verifyOtp(String phone, String countryCode, String token, Button verifyButton) {
+    private void verifyOtp(String name, String pinHash, String phone, String countryCode, String token, Button verifyButton) {
         String fullPhone = countryCode + phone;
         verifyButton.setEnabled(false);
         verifyButton.setText("Verificando...");
@@ -744,7 +765,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 SupabaseClient client = new SupabaseClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY);
                 activeSession = client.verifyPhoneOtp(fullPhone, token);
-                client.registerUser(phone, countryCode, activeSession);
+                client.registerUser(name, pinHash, phone, countryCode, activeSession);
                 runOnUiThread(() -> {
                     Toast.makeText(this, "Cuenta verificada", Toast.LENGTH_SHORT).show();
                     showAccountsScreen();
@@ -790,6 +811,24 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+    private String hashPin(String pin) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] encoded = digest.digest(pin.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
+            for (byte item : encoded) {
+                String value = Integer.toHexString(0xff & item);
+                if (value.length() == 1) {
+                    hex.append('0');
+                }
+                hex.append(value);
+            }
+            return hex.toString();
+        } catch (Exception exception) {
+            throw new IllegalStateException("No se pudo proteger el PIN.", exception);
+        }
+    }
+
     private TextView title(String value, int size) {
         TextView view = text(value, size, PRIMARY, true);
         view.setLineSpacing(dp(2), 1.0f);
@@ -804,6 +843,34 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView label(String value) {
         return text(value, 14, PRIMARY, true);
+    }
+
+    private EditText registerInput(String hint, int inputType) {
+        EditText input = new EditText(this);
+        input.setHint(hint);
+        input.setTextSize(16);
+        input.setSingleLine(true);
+        input.setTextColor(PRIMARY);
+        input.setHintTextColor(Color.rgb(142, 151, 160));
+        input.setInputType(inputType);
+        input.setBackground(roundedStroke(Color.WHITE, BORDER, 18, 1));
+        input.setPadding(dp(14), 0, dp(14), 0);
+        input.setMinHeight(dp(58));
+        input.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                updateRegisterState(false);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+        return input;
     }
 
     private TextView text(String value, int size, int color, boolean bold) {

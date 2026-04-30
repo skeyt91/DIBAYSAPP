@@ -47,7 +47,7 @@ final class SupabaseClient {
         );
     }
 
-    Account registerUser(String phone, String countryCode, Session session) throws Exception {
+    Account registerUser(String name, String pinHash, String phone, String countryCode, Session session) throws Exception {
         requireConfig();
 
         Account existing = findAccount(phone, countryCode, session.accessToken);
@@ -55,9 +55,9 @@ final class SupabaseClient {
             return existing;
         }
 
-        String accountId = createAccount(phone, countryCode, session.userId, session.accessToken);
-        createUser(phone, countryCode, accountId, session.userId, session.accessToken);
-        return new Account(accountId, "Cuenta principal", phone, countryCode);
+        String accountId = createAccount(name, phone, countryCode, session.userId, session.accessToken);
+        createUser(name, pinHash, phone, countryCode, accountId, session.userId, session.accessToken);
+        return new Account(accountId, name, phone, countryCode);
     }
 
     List<Account> listAccounts(String accessToken) throws Exception {
@@ -100,10 +100,10 @@ final class SupabaseClient {
         );
     }
 
-    private String createAccount(String phone, String countryCode, String userId, String accessToken) throws Exception {
+    private String createAccount(String name, String phone, String countryCode, String userId, String accessToken) throws Exception {
         JSONObject account = new JSONObject();
         account.put("auth_user_id", userId);
-        account.put("nombre", "Cuenta principal");
+        account.put("nombre", name);
         account.put("tipo", "principal");
         account.put("telefono", phone);
         account.put("pais_codigo", countryCode);
@@ -112,12 +112,14 @@ final class SupabaseClient {
         return accountResult.getJSONObject(0).getString("id");
     }
 
-    private void createUser(String phone, String countryCode, String accountId, String userId, String accessToken) throws Exception {
+    private void createUser(String name, String pinHash, String phone, String countryCode, String accountId, String userId, String accessToken) throws Exception {
         JSONObject user = new JSONObject();
         user.put("auth_user_id", userId);
         user.put("cuenta_id", accountId);
         user.put("celular", phone);
         user.put("pais_codigo", countryCode);
+        user.put("nombre", name);
+        user.put("pin_hash", pinHash);
 
         post("usuarios", user, accessToken);
     }

@@ -16,6 +16,7 @@ create table if not exists public.usuarios (
   celular text not null,
   pais_codigo text not null default '+591',
   nombre text,
+  pin_hash text,
   created_at timestamptz not null default now(),
   unique (pais_codigo, celular)
 );
@@ -35,6 +36,7 @@ create table if not exists public.productos (
 
 alter table public.cuentas add column if not exists auth_user_id uuid references auth.users(id) on delete cascade;
 alter table public.usuarios add column if not exists auth_user_id uuid references auth.users(id) on delete cascade;
+alter table public.usuarios add column if not exists pin_hash text;
 alter table public.productos add column if not exists auth_user_id uuid references auth.users(id) on delete cascade;
 
 create index if not exists cuentas_auth_user_id_idx on public.cuentas(auth_user_id);
