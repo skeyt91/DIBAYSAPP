@@ -137,6 +137,7 @@ fun AppNavHost(
                 onOpenProviders = { navController.navigate(Screen.Providers.route) },
                 onOpenUsers = { navController.navigate(Screen.Users.route) },
                 onOpenReports = { navController.navigate(Screen.Reports.route) },
+                onNavigateToRoute = { route -> navController.navigate(route) },
             )
         }
 
@@ -178,6 +179,60 @@ fun AppNavHost(
             )
         }
 
+        composable(Screen.Orders.route) {
+            FeatureScreen(
+                title = "Pedidos",
+                description = "Revisa pedidos pendientes, confirmados y por despachar.",
+                actionLabel = "Volver al dashboard",
+                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            )
+        }
+
+        composable(Screen.CatalogPublic.route) {
+            FeatureScreen(
+                title = "Catalogo Online",
+                description = "Comparte tus productos en una vista publica para clientes.",
+                actionLabel = "Volver al dashboard",
+                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            )
+        }
+
+        composable(Screen.Assistant.route) {
+            FeatureScreen(
+                title = "Asistente Inteligente",
+                description = "Atajos, recomendaciones y ayuda contextual para operar mas rapido.",
+                actionLabel = "Volver al dashboard",
+                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            )
+        }
+
+        composable(Screen.OnlineCatalog.route) {
+            FeatureScreen(
+                title = "Catalogo Online",
+                description = "Comparte productos con clientes desde un catalogo publico.",
+                actionLabel = "Volver al dashboard",
+                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            )
+        }
+
+        composable(Screen.Finances.route) {
+            FeatureScreen(
+                title = "Finanzas",
+                description = "Resumen de ingresos, egresos, utilidad y flujo de caja.",
+                actionLabel = "Volver al dashboard",
+                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            )
+        }
+
+        composable(Screen.Coupon.route) {
+            FeatureScreen(
+                title = "Cupon",
+                description = "Descuentos promocionales y cupones de venta.",
+                actionLabel = "Volver al dashboard",
+                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            )
+        }
+
         composable(Screen.Users.route) {
             val session = uiState.session
             UsuariosRoute(
@@ -192,6 +247,33 @@ fun AppNavHost(
             FeatureScreen(
                 title = "Reportes",
                 description = "Resumen financiero, utilidad, pendientes y rentabilidad.",
+                actionLabel = "Volver al dashboard",
+                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            )
+        }
+
+        composable(Screen.Settings.route) {
+            FeatureScreen(
+                title = "Configuraciones",
+                description = "Ajustes del sistema, preferencias y seguridad de la cuenta.",
+                actionLabel = "Volver al dashboard",
+                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            )
+        }
+
+        composable(Screen.Help.route) {
+            FeatureScreen(
+                title = "Ayuda",
+                description = "Guia rapida, soporte y preguntas frecuentes.",
+                actionLabel = "Volver al dashboard",
+                onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
+            )
+        }
+
+        composable(Screen.Transactions.route) {
+            FeatureScreen(
+                title = "Transacciones",
+                description = "Movimientos recientes, cobros y saldos registrados.",
                 actionLabel = "Volver al dashboard",
                 onAction = { navController.popBackStack(Screen.Dashboard.route, inclusive = false) },
             )
