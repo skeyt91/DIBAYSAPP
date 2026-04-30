@@ -395,7 +395,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showLoginScreen() {
         FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(SURFACE);
+        root.setBackgroundColor(Color.WHITE);
 
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
@@ -404,12 +404,12 @@ public class MainActivity extends AppCompatActivity {
         boolean wide = getResources().getConfiguration().screenWidthDp >= 720;
         LinearLayout shell = new LinearLayout(this);
         shell.setOrientation(wide ? LinearLayout.HORIZONTAL : LinearLayout.VERTICAL);
-        shell.setGravity(Gravity.CENTER);
+        shell.setGravity(wide ? Gravity.CENTER : Gravity.TOP);
         shell.setPadding(
                 wide ? dp(44) : dp(22),
-                wide ? dp(34) : dp(24),
+                wide ? dp(34) : dp(26),
                 wide ? dp(44) : dp(22),
-                wide ? dp(34) : dp(96)
+                wide ? dp(34) : dp(34)
         );
         scroll.addView(shell, new ScrollView.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -418,27 +418,34 @@ public class MainActivity extends AppCompatActivity {
 
         LinearLayout brandPanel = new LinearLayout(this);
         brandPanel.setOrientation(LinearLayout.VERTICAL);
-        brandPanel.setPadding(dp(28), dp(28), dp(28), dp(28));
+        brandPanel.setPadding(wide ? dp(30) : 0, wide ? dp(30) : 0, wide ? dp(30) : 0, wide ? dp(30) : dp(18));
         brandPanel.setGravity(Gravity.CENTER_VERTICAL);
-        brandPanel.setBackground(roundedStroke(Color.WHITE, BORDER, 22, 1));
+        if (wide) {
+            brandPanel.setBackground(roundedStroke(Color.WHITE, BORDER, 24, 1));
+        }
 
-        TextView eyebrow = text("DIBAYS FARDOS", 13, WHATSAPP, true);
+        TextView eyebrow = text("DIBAYS FARDOS", 12, WHATSAPP, true);
         eyebrow.setLetterSpacing(0.08f);
+        eyebrow.setGravity(wide ? Gravity.START : Gravity.CENTER);
         brandPanel.addView(eyebrow);
 
-        TextView headline = text("Ingreso seguro para tu negocio", wide ? 34 : 28, INK, true);
+        TextView headline = text(wide ? "Ingreso seguro para tu negocio" : "Hola de nuevo", wide ? 34 : 36, INK, true);
         headline.setLineSpacing(dp(3), 1.0f);
-        brandPanel.addView(headline, marginTop(10));
+        headline.setGravity(wide ? Gravity.START : Gravity.CENTER);
+        brandPanel.addView(headline, marginTop(8));
 
-        TextView summary = body("Gestiona inventario, ventas y deudas con una experiencia limpia, rapida y protegida.", 16);
+        TextView summary = body(wide
+                ? "Gestiona inventario, ventas y deudas con una experiencia limpia, rapida y protegida."
+                : "Entra a tu cuenta para seguir administrando tus fardos.", wide ? 16 : 15);
+        summary.setGravity(wide ? Gravity.START : Gravity.CENTER);
         brandPanel.addView(summary, marginTop(12));
 
         LoginIllustrationView financePanel = new LoginIllustrationView(this);
         LinearLayout.LayoutParams financeParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                wide ? dp(300) : dp(210)
+                wide ? dp(300) : dp(170)
         );
-        financeParams.setMargins(0, dp(28), 0, wide ? dp(24) : dp(10));
+        financeParams.setMargins(0, wide ? dp(28) : dp(20), 0, wide ? dp(24) : dp(0));
         brandPanel.addView(financePanel, financeParams);
 
         if (wide) {
@@ -458,29 +465,29 @@ public class MainActivity extends AppCompatActivity {
 
         LinearLayout loginPanel = new LinearLayout(this);
         loginPanel.setOrientation(LinearLayout.VERTICAL);
-        loginPanel.setPadding(dp(28), dp(26), dp(28), dp(26));
-        loginPanel.setBackground(roundedStroke(Color.WHITE, BORDER, 22, 1));
+        loginPanel.setPadding(dp(24), wide ? dp(26) : dp(24), dp(24), dp(24));
+        loginPanel.setBackground(roundedStroke(wide ? Color.WHITE : SURFACE, BORDER, 24, 1));
 
         loginPanel.addView(topBackRow(v -> showWelcomeScreen()));
 
-        TextView title = title("Iniciar sesion", wide ? 32 : 30);
-        loginPanel.addView(title, marginTop(28));
+        TextView title = title("Elige como ingresar", wide ? 32 : 26);
+        loginPanel.addView(title, marginTop(24));
 
-        TextView subtitle = body("Elige un metodo de acceso para continuar con DIBAYS FARDOS.", 15);
+        TextView subtitle = body("Usa tu numero celular para recibir un codigo seguro.", 15);
         loginPanel.addView(subtitle, marginTop(8));
 
         LinearLayout secureNotice = new LinearLayout(this);
         secureNotice.setOrientation(LinearLayout.HORIZONTAL);
         secureNotice.setGravity(Gravity.CENTER_VERTICAL);
-        secureNotice.setPadding(dp(14), dp(12), dp(14), dp(12));
+        secureNotice.setPadding(dp(14), dp(13), dp(14), dp(13));
         secureNotice.setBackground(roundedStroke(SUCCESS_SOFT, Color.rgb(190, 226, 209), 16, 1));
 
-        TextView secureIcon = text("OK", 12, WHATSAPP, true);
+        TextView secureIcon = text("OK", 11, WHATSAPP, true);
         secureIcon.setGravity(Gravity.CENTER);
         secureIcon.setBackground(rounded(Color.WHITE, 10));
         secureNotice.addView(secureIcon, new LinearLayout.LayoutParams(dp(34), dp(28)));
 
-        TextView secureText = text("Conexion protegida para informacion comercial sensible.", 14, Color.rgb(38, 92, 68), false);
+        TextView secureText = text("Acceso protegido con verificacion por SMS.", 14, Color.rgb(38, 92, 68), false);
         LinearLayout.LayoutParams secureTextParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
         secureTextParams.setMargins(dp(12), 0, 0, 0);
         secureNotice.addView(secureText, secureTextParams);
@@ -497,7 +504,7 @@ public class MainActivity extends AppCompatActivity {
         TextView register = text("No tienes una cuenta? Registrate", 14, TEXT_MUTED, false);
         register.setGravity(Gravity.CENTER);
         register.setOnClickListener(v -> showRegisterScreen());
-        loginPanel.addView(register, marginTop(22));
+        loginPanel.addView(register, marginTop(20));
 
         View divider = new View(this);
         divider.setBackgroundColor(BORDER);
@@ -508,7 +515,7 @@ public class MainActivity extends AppCompatActivity {
         dividerParams.setMargins(0, dp(24), 0, dp(18));
         loginPanel.addView(divider, dividerParams);
 
-        TextView footer = text("Soporte disponible para recuperar el acceso a tu cuenta.", 13, TEXT_MUTED, false);
+        TextView footer = text("Soporte disponible si no puedes acceder.", 13, TEXT_MUTED, false);
         footer.setGravity(Gravity.CENTER);
         loginPanel.addView(footer);
 
@@ -805,8 +812,11 @@ public class MainActivity extends AppCompatActivity {
         view.setTextSize(size);
         view.setTextColor(color);
         view.setIncludeFontPadding(true);
+        view.setLetterSpacing(0.01f);
         if (bold) {
-            view.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            view.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        } else {
+            view.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
         }
         return view;
     }
@@ -816,10 +826,11 @@ public class MainActivity extends AppCompatActivity {
         button.setText(value);
         button.setTextSize(16);
         button.setTextColor(Color.WHITE);
-        button.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        button.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         button.setAllCaps(false);
         button.setBackground(rounded(PRIMARY, 18));
         button.setMinHeight(dp(58));
+        button.setPadding(dp(16), 0, dp(16), 0);
         return button;
     }
 
@@ -828,10 +839,11 @@ public class MainActivity extends AppCompatActivity {
         button.setText(value);
         button.setTextSize(16);
         button.setTextColor(PRIMARY);
-        button.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        button.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         button.setAllCaps(false);
         button.setBackground(roundedStroke(Color.WHITE, BORDER, 18, 1));
         button.setMinHeight(dp(58));
+        button.setPadding(dp(16), 0, dp(16), 0);
         return button;
     }
 
@@ -840,7 +852,7 @@ public class MainActivity extends AppCompatActivity {
         button.setText("WhatsApp  " + value);
         button.setTextSize(14);
         button.setTextColor(Color.WHITE);
-        button.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        button.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         button.setAllCaps(false);
         button.setPadding(dp(16), 0, dp(16), 0);
         button.setBackground(rounded(WHATSAPP, 26));
