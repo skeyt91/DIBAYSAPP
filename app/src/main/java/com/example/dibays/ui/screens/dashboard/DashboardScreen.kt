@@ -69,9 +69,8 @@ fun DashboardScreen(
     val scope = rememberCoroutineScope()
     val filteredProducts = state.products.filter { product ->
         val query = state.searchQuery.trim()
-        query.isBlank() ||
-            listOf(product.name, product.code, product.category)
-                .any { candidate -> candidate.contains(query, ignoreCase = true) }
+        query.isBlank() || listOf(product.name, product.code, product.category)
+            .any { candidate -> candidate.contains(query, ignoreCase = true) }
     }
 
     ModalNavigationDrawer(
@@ -101,46 +100,25 @@ fun DashboardScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = 88.dp),
             ) {
                 HeaderSection(
                     onMenuClick = { scope.launch { drawerState.open() } },
                     onRegisterSale = onOpenSales,
+                    onSearchQueryChange = onSearchQueryChange,
+                    searchQuery = state.searchQuery,
+                    productsCount = state.products.size,
                 )
 
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .widthIn(max = 760.dp)
+                        .align(Alignment.CenterHorizontally)
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    SearchBarCard(
-                        query = state.searchQuery,
-                        onQueryChange = onSearchQueryChange,
-                    )
-
-                    MockupCard(
-                        title = if (state.products.isEmpty()) {
-                            "¿Empezamos por crear tu primer producto?"
-                        } else {
-                            "Ya tienes productos en tu inventario"
-                        },
-                        subtitle = if (state.products.isEmpty()) {
-                            "Es simple, solo necesitas un nombre y un precio."
-                        } else {
-                            "Sigue sumando inventario y registra nuevas ventas."
-                        },
-                        actionLabel = "+ Añadir producto",
-                        onAction = onOpenInventory,
-                    )
-
-                    MockupCard(
-                        title = "Historial de ventas",
-                        subtitle = "Revisa el movimiento del dia o simula una nueva venta.",
-                        actionLabel = "+ Simular una venta",
-                        onAction = onOpenSales,
-                    )
-
                     if (state.searchQuery.isNotBlank()) {
                         SearchResultsCard(
                             query = state.searchQuery,
@@ -149,46 +127,24 @@ fun DashboardScreen(
                         )
                     }
 
+                    SummaryCard(
+                        label = "Productos",
+                        value = state.products.size.toString(),
+                        onAction = onOpenInventory,
+                    )
+                    SummaryCard(
+                        label = "Ventas",
+                        value = "0",
+                        onAction = onOpenSales,
+                    )
+                    SummaryCard(
+                        label = "Usuarios",
+                        value = "Ver",
+                        onAction = onOpenUsers,
+                    )
+
                     state.error?.let { error ->
                         ErrorCard(error = error)
-                    }
-
-                    Card(
-                        shape = RoundedCornerShape(22.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = "Usuarios activos",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "Toca Usuarios en el menu lateral para ver colaboradores y accesos.",
-                                color = Color(0xFF6B7280),
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            OutlinedButton(onClick = onOpenUsers) {
-                                Text("Abrir usuarios")
-                            }
-                        }
-                    }
-
-                    Card(
-                        shape = RoundedCornerShape(22.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = "Estado rapido",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Productos cargados: ${state.products.size}")
-                            Text("Sesion: ${email.ifBlank { "Activa" }}")
-                        }
                     }
                 }
             }
@@ -215,109 +171,98 @@ fun DashboardScreen(
 private fun HeaderSection(
     onMenuClick: () -> Unit,
     onRegisterSale: () -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    searchQuery: String,
+    productsCount: Int,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(HeaderBg)
-            .padding(horizontal = 18.dp, vertical = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .padding(horizontal = 16.dp, vertical = 14.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .clickable(onClick = onMenuClick)
-                    .padding(8.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                HamburgerIcon()
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable(onClick = onMenuClick)
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    HamburgerIcon()
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "Inicio",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
-            Spacer(modifier = Modifier.width(10.dp))
+
+            OutlinedButton(onClick = onRegisterSale) {
+                Text("Registrar venta")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column {
+                Text(
+                    text = "HOY",
+                    color = Teal,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "$0.00",
+                    color = Color.White,
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = "en 0 ventas completadas",
+                    color = Teal,
+                    fontSize = 13.sp,
+                )
+            }
+
             Text(
-                text = "Inicio",
-                color = Color.White,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+                text = "◉",
+                color = Teal,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
             )
         }
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "HOY",
-                color = Teal,
-                fontSize = 19.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(text = "◉", color = Teal, fontSize = 18.sp)
-        }
-
-        Spacer(modifier = Modifier.height(2.dp))
-
-        Text(
-            text = "$0.00",
-            color = Color.White,
-            fontSize = 44.sp,
-            fontWeight = FontWeight.Bold,
-        )
-
-        Spacer(modifier = Modifier.height(2.dp))
-
-        Text(
-            text = "en 0 ventas completadas",
-            color = Teal,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
+        OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
-            onClick = onRegisterSale,
-            colors = ButtonDefaults.buttonColors(containerColor = Teal, contentColor = Color.White),
-            shape = RoundedCornerShape(14.dp),
-            contentPadding = PaddingValues(vertical = 14.dp),
-        ) {
-            Text(
-                text = "Registrar venta",
-                fontWeight = FontWeight.SemiBold,
-            )
-        }
-    }
-}
+            value = searchQuery,
+            onValueChange = onSearchQueryChange,
+            singleLine = true,
+            label = { Text("Buscar en inventario") },
+        )
 
-@Composable
-private fun SearchBarCard(
-    query: String,
-    onQueryChange: (String) -> Unit,
-) {
-    Card(
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "Buscar inventario",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = query,
-                onValueChange = onQueryChange,
-                singleLine = true,
-                label = { Text("Nombre, codigo o categoria") },
-            )
-        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Text(
+            text = "Productos cargados: $productsCount",
+            color = Color.White.copy(alpha = 0.72f),
+            fontSize = 12.sp,
+        )
     }
 }
 
@@ -333,11 +278,7 @@ private fun SearchResultsCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = if (products.isEmpty()) {
-                    "Sin resultados para \"$query\""
-                } else {
-                    "Resultados para \"$query\""
-                },
+                text = if (products.isEmpty()) "Sin resultados para \"$query\"" else "Resultados para \"$query\"",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -357,12 +298,47 @@ private fun SearchResultsCard(
                     ProductRow(product = product)
                     Spacer(modifier = Modifier.height(10.dp))
                 }
-                if (products.size > 5) {
-                    Text(
-                        text = "Mostrando 5 de ${products.size} coincidencias.",
-                        color = Color(0xFF6B7280),
-                    )
-                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SummaryCard(
+    label: String,
+    value: String,
+    onAction: () -> Unit,
+) {
+    Card(
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = value,
+                    color = Color(0xFF6B7280),
+                )
+            }
+
+            Button(
+                onClick = onAction,
+                colors = ButtonDefaults.buttonColors(containerColor = Teal, contentColor = Color.White),
+                shape = RoundedCornerShape(14.dp),
+            ) {
+                Text(if (label == "Ventas") "Ver ventas" else "Abrir")
             }
         }
     }
@@ -453,12 +429,7 @@ private fun DrawerMenuItem(
         item.badge?.let { badge ->
             Spacer(modifier = Modifier.width(8.dp))
             if (badge == "NUEVO") {
-                Text(
-                    text = "NUEVO",
-                    color = Teal,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                )
+                Text(text = "NUEVO", color = Teal, fontSize = 10.sp, fontWeight = FontWeight.Bold)
             } else {
                 CounterBadge(text = badge)
             }
@@ -506,46 +477,7 @@ private fun BottomAccountBanner() {
                 fontSize = 12.sp,
             )
         }
-        Text(
-            text = ">",
-            color = HeaderBg,
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp,
-        )
-    }
-}
-
-@Composable
-private fun MockupCard(
-    title: String,
-    subtitle: String,
-    actionLabel: String,
-    onAction: () -> Unit,
-) {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = subtitle,
-                color = Color(0xFF6B7280),
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Button(
-                onClick = onAction,
-                colors = ButtonDefaults.buttonColors(containerColor = Teal, contentColor = Color.White),
-                shape = RoundedCornerShape(14.dp),
-            ) {
-                Text(actionLabel, fontWeight = FontWeight.SemiBold)
-            }
-        }
+        Text(text = ">", color = HeaderBg, fontWeight = FontWeight.Bold, fontSize = 20.sp)
     }
 }
 
@@ -609,12 +541,7 @@ private fun FloatingAppButton(
             .background(HeaderBg),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = "◆",
-            color = Teal,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-        )
+        Text(text = "◆", color = Teal, fontSize = 22.sp, fontWeight = FontWeight.Bold)
     }
 }
 
