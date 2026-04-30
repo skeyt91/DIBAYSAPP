@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.LocalOffer
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material.icons.filled.QueryStats
@@ -42,6 +43,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -194,15 +196,18 @@ private fun HeaderSection(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
+                IconButton(
+                    onClick = onMenuClick,
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .clickable(onClick = onMenuClick)
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center,
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White.copy(alpha = 0.08f)),
                 ) {
-                    HamburgerIcon()
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Abrir menú",
+                        tint = Color.White,
+                    )
                 }
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
@@ -378,11 +383,7 @@ private fun DrawerContent(
             fontWeight = FontWeight.Bold,
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Menu",
-            color = Color.White.copy(alpha = 0.55f),
-            style = MaterialTheme.typography.bodySmall,
-        )
+        Text(text = "Menú", color = Color.White.copy(alpha = 0.55f), style = MaterialTheme.typography.bodySmall)
         Spacer(modifier = Modifier.height(14.dp))
 
         entries.forEach { item ->
