@@ -1,6 +1,6 @@
 create table if not exists public.cuentas (
   id uuid primary key default gen_random_uuid(),
-  auth_user_id uuid not null references auth.users(id) on delete cascade,
+  auth_user_id uuid references auth.users(id) on delete cascade,
   nombre text not null,
   tipo text not null default 'principal',
   telefono text,
@@ -11,10 +11,10 @@ create table if not exists public.cuentas (
 
 create table if not exists public.usuarios (
   id uuid primary key default gen_random_uuid(),
-  auth_user_id uuid not null references auth.users(id) on delete cascade,
+  auth_user_id uuid references auth.users(id) on delete cascade,
   cuenta_id uuid references public.cuentas(id) on delete cascade,
-  celular text not null,
-  pais_codigo text not null default '+591',
+  celular text,
+  pais_codigo text,
   nombre text,
   pin_hash text,
   created_at timestamptz not null default now(),
@@ -23,7 +23,7 @@ create table if not exists public.usuarios (
 
 create table if not exists public.productos (
   id uuid primary key default gen_random_uuid(),
-  auth_user_id uuid not null references auth.users(id) on delete cascade,
+  auth_user_id uuid references auth.users(id) on delete cascade,
   cuenta_id uuid references public.cuentas(id) on delete cascade,
   nombre text not null,
   codigo text,
@@ -38,6 +38,11 @@ alter table public.cuentas add column if not exists auth_user_id uuid references
 alter table public.usuarios add column if not exists auth_user_id uuid references auth.users(id) on delete cascade;
 alter table public.usuarios add column if not exists pin_hash text;
 alter table public.productos add column if not exists auth_user_id uuid references auth.users(id) on delete cascade;
+alter table public.cuentas alter column auth_user_id drop not null;
+alter table public.usuarios alter column auth_user_id drop not null;
+alter table public.usuarios alter column celular drop not null;
+alter table public.usuarios alter column pais_codigo drop not null;
+alter table public.productos alter column auth_user_id drop not null;
 
 create index if not exists cuentas_auth_user_id_idx on public.cuentas(auth_user_id);
 create index if not exists usuarios_auth_user_id_idx on public.usuarios(auth_user_id);
@@ -66,13 +71,13 @@ drop policy if exists "productos propios update" on public.productos;
 
 create policy "cuentas propias select"
 on public.cuentas for select
-to authenticated
-using (auth_user_id = auth.uid());
+to anon, authenticated
+using (auth_user_id = auth.uid() or auth_user_id is null);
 
 create policy "cuentas propias insert"
 on public.cuentas for insert
-to authenticated
-with check (auth_user_id = auth.uid());
+to anon, authenticated
+with check (auth_user_id = auth.uid() or auth_user_id is null);
 
 create policy "cuentas propias update"
 on public.cuentas for update
@@ -82,13 +87,13 @@ with check (auth_user_id = auth.uid());
 
 create policy "usuarios propios select"
 on public.usuarios for select
-to authenticated
-using (auth_user_id = auth.uid());
+to anon, authenticated
+using (auth_user_id = auth.uid() or auth_user_id is null);
 
 create policy "usuarios propios insert"
 on public.usuarios for insert
-to authenticated
-with check (auth_user_id = auth.uid());
+to anon, authenticated
+with check (auth_user_id = auth.uid() or auth_user_id is null);
 
 create policy "usuarios propios update"
 on public.usuarios for update

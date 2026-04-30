@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText nameInput;
     private EditText pinInput;
+    private EditText pinConfirmInput;
     private EditText phoneInput;
     private CheckBox termsCheckBox;
     private Button continueButton;
@@ -308,7 +309,7 @@ public class MainActivity extends AppCompatActivity {
 
         TextView title = title("Crea tu cuenta segura", 28);
         content.addView(title, marginTop(42));
-        content.addView(body("Registra tu nombre, un PIN y tu numero de celular para proteger tu cuenta.", 16), marginTop(12));
+        content.addView(body("Registra tu nombre y confirma tu PIN para que no lo olvides.", 16), marginTop(12));
 
         nameInput = registerInput("Nombre completo *", android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
         content.addView(nameInput, marginTop(30));
@@ -316,62 +317,8 @@ public class MainActivity extends AppCompatActivity {
         pinInput = registerInput("Crea tu PIN *", android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
         content.addView(pinInput, marginTop(10));
 
-        TextView label = label("Ingresa tu celular *");
-        content.addView(label, marginTop(22));
-
-        phoneFieldContainer = new LinearLayout(this);
-        phoneFieldContainer.setOrientation(LinearLayout.HORIZONTAL);
-        phoneFieldContainer.setGravity(Gravity.CENTER_VERTICAL);
-        phoneFieldContainer.setPadding(dp(14), dp(4), dp(14), dp(4));
-        phoneFieldContainer.setBackground(roundedStroke(Color.WHITE, BORDER, 18, 1));
-
-        LinearLayout countrySelector = new LinearLayout(this);
-        countrySelector.setGravity(Gravity.CENTER_VERTICAL);
-        countrySelector.setPadding(0, 0, dp(8), 0);
-        countrySelector.setOnClickListener(v -> showCountryPicker());
-
-        countryBadgeText = text(selectedCountry.iso, 12, Color.WHITE, true);
-        countryBadgeText.setGravity(Gravity.CENTER);
-        countryBadgeText.setBackground(rounded(PRIMARY, 8));
-        countrySelector.addView(countryBadgeText, new LinearLayout.LayoutParams(dp(34), dp(24)));
-
-        countryCodeText = text(selectedCountry.dialCode + " v", 16, PRIMARY, true);
-        LinearLayout.LayoutParams codeParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-        codeParams.setMargins(dp(10), 0, dp(10), 0);
-        countrySelector.addView(countryCodeText, codeParams);
-        phoneFieldContainer.addView(countrySelector);
-
-        View divider = new View(this);
-        divider.setBackgroundColor(BORDER);
-        phoneFieldContainer.addView(divider, new LinearLayout.LayoutParams(dp(1), dp(28)));
-
-        phoneInput = new EditText(this);
-        phoneInput.setHint("Numero celular");
-        phoneInput.setTextSize(16);
-        phoneInput.setSingleLine(true);
-        phoneInput.setTextColor(PRIMARY);
-        phoneInput.setHintTextColor(Color.rgb(142, 151, 160));
-        phoneInput.setBackgroundColor(Color.TRANSPARENT);
-        phoneInput.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
-        phoneInput.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                updateRegisterState(false);
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
-        });
-        phoneFieldContainer.addView(phoneInput, new LinearLayout.LayoutParams(0, dp(54), 1));
-        content.addView(phoneFieldContainer, marginTop(8));
+        pinConfirmInput = registerInput("Repite tu PIN *", android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        content.addView(pinConfirmInput, marginTop(10));
 
         termsCheckBox = new CheckBox(this);
         termsCheckBox.setText("Acepto los terminos y condiciones");
@@ -390,7 +337,7 @@ public class MainActivity extends AppCompatActivity {
                 updateRegisterState(true);
                 return;
             }
-            requestOtp();
+            registerNameAndPin();
         });
         FrameLayout.LayoutParams bottomButtonParams = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -586,6 +533,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showAccountsScreen() {
+        showAccountsScreen(null);
+    }
+
+    private void showAccountsScreen(SupabaseClient.Account createdAccount) {
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(SURFACE);
 
@@ -606,8 +557,12 @@ public class MainActivity extends AppCompatActivity {
         accountList.setOrientation(LinearLayout.VERTICAL);
         content.addView(accountList, marginTop(28));
 
-        accountList.addView(text("Cargando cuentas...", 15, TEXT_MUTED, false));
-        loadAccounts(accountList);
+        if (createdAccount != null) {
+            accountList.addView(accountCard(createdAccount), marginTop(10));
+        } else {
+            accountList.addView(text("Cargando cuentas...", 15, TEXT_MUTED, false));
+            loadAccounts(accountList);
+        }
 
         setContentView(root);
     }
@@ -620,7 +575,7 @@ public class MainActivity extends AppCompatActivity {
 
         accountCard.addView(text("DIBAYS FARDOS", 13, WHATSAPP, true));
         accountCard.addView(text(account.name == null || account.name.isEmpty() ? "Cuenta principal" : account.name, 22, INK, true), marginTop(8));
-        accountCard.addView(body("Telefono: " + account.countryCode + " " + account.phone, 14), marginTop(6));
+        accountCard.addView(body("Cuenta protegida con PIN confirmado.", 14), marginTop(6));
 
         Button enter = primaryButton("Entrar");
         accountCard.addView(enter, marginTop(18));
@@ -695,18 +650,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateRegisterState(boolean showErrors) {
-        if (nameInput == null || pinInput == null || phoneInput == null || termsCheckBox == null || continueButton == null) {
+        if (nameInput == null || pinInput == null || pinConfirmInput == null || termsCheckBox == null || continueButton == null) {
             return;
         }
 
         boolean hasName = !nameInput.getText().toString().trim().isEmpty();
-        boolean hasPin = pinInput.getText().toString().trim().length() >= 4;
-        boolean hasPhone = !phoneInput.getText().toString().trim().isEmpty();
+        String pin = pinInput.getText().toString().trim();
+        String pinConfirm = pinConfirmInput.getText().toString().trim();
+        boolean hasPin = pin.length() >= 4;
+        boolean pinMatches = hasPin && pin.equals(pinConfirm);
         boolean valid = isRegisterValid();
         nameInput.setBackground(roundedStroke(Color.WHITE, showErrors && !hasName ? ERROR : BORDER, 18, showErrors && !hasName ? 2 : 1));
         pinInput.setBackground(roundedStroke(Color.WHITE, showErrors && !hasPin ? ERROR : BORDER, 18, showErrors && !hasPin ? 2 : 1));
-        int stroke = showErrors && !hasPhone ? ERROR : BORDER;
-        phoneFieldContainer.setBackground(roundedStroke(Color.WHITE, stroke, 18, showErrors && !hasPhone ? 2 : 1));
+        pinConfirmInput.setBackground(roundedStroke(Color.WHITE, showErrors && !pinMatches ? ERROR : BORDER, 18, showErrors && !pinMatches ? 2 : 1));
 
         continueButton.setEnabled(valid);
         if (valid) {
@@ -721,36 +677,33 @@ public class MainActivity extends AppCompatActivity {
     private boolean isRegisterValid() {
         return nameInput != null
                 && pinInput != null
-                && phoneInput != null
+                && pinConfirmInput != null
                 && termsCheckBox != null
                 && !nameInput.getText().toString().trim().isEmpty()
                 && pinInput.getText().toString().trim().length() >= 4
-                && !phoneInput.getText().toString().trim().isEmpty()
+                && pinInput.getText().toString().trim().equals(pinConfirmInput.getText().toString().trim())
                 && termsCheckBox.isChecked();
     }
 
-    private void requestOtp() {
+    private void registerNameAndPin() {
         String name = nameInput.getText().toString().trim();
         String pinHash = hashPin(pinInput.getText().toString().trim());
-        String phone = phoneInput.getText().toString().trim();
-        String countryCode = selectedCountry.dialCode;
-        String fullPhone = countryCode + phone;
         continueButton.setEnabled(false);
-        continueButton.setText("Enviando codigo...");
+        continueButton.setText("Creando cuenta...");
 
         new Thread(() -> {
             try {
-                new SupabaseClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-                        .requestPhoneOtp(fullPhone);
+                SupabaseClient.Account account = new SupabaseClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+                        .registerUser(name, pinHash);
                 runOnUiThread(() -> {
-                    Toast.makeText(this, "Codigo enviado por SMS", Toast.LENGTH_SHORT).show();
-                    showOtpScreen(name, pinHash, phone, countryCode);
+                    Toast.makeText(this, "Cuenta creada", Toast.LENGTH_SHORT).show();
+                    showAccountsScreen(account);
                 });
             } catch (Exception exception) {
                 runOnUiThread(() -> {
                     continueButton.setText("Continuar");
                     updateRegisterState(false);
-                    Toast.makeText(this, "No se pudo enviar codigo: " + exception.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "No se pudo crear cuenta: " + exception.getMessage(), Toast.LENGTH_LONG).show();
                 });
             }
         }).start();

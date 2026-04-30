@@ -60,6 +60,25 @@ final class SupabaseClient {
         return new Account(accountId, name, phone, countryCode);
     }
 
+    Account registerUser(String name, String pinHash) throws Exception {
+        requireConfig();
+
+        JSONObject account = new JSONObject();
+        account.put("nombre", name);
+        account.put("tipo", "principal");
+
+        JSONArray accountResult = post("cuentas", account, "");
+        String accountId = accountResult.getJSONObject(0).getString("id");
+
+        JSONObject user = new JSONObject();
+        user.put("cuenta_id", accountId);
+        user.put("nombre", name);
+        user.put("pin_hash", pinHash);
+
+        post("usuarios", user, "");
+        return new Account(accountId, name, "", "");
+    }
+
     List<Account> listAccounts(String accessToken) throws Exception {
         requireConfig();
 
