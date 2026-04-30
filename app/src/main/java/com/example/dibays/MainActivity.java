@@ -307,18 +307,43 @@ public class MainActivity extends AppCompatActivity {
         content.addView(topBackRow(v -> showWelcomeScreen()));
         content.addView(progressBar());
 
-        TextView title = title("Crea tu cuenta segura", 28);
-        content.addView(title, marginTop(42));
-        content.addView(body("Registra tu nombre y confirma tu PIN para que no lo olvides.", 16), marginTop(12));
+        TextView eyebrow = text("REGISTRO SEGURO", 12, Color.rgb(126, 132, 145), true);
+        eyebrow.setLetterSpacing(0.12f);
+        content.addView(eyebrow, marginTop(32));
+
+        TextView title = text("Crea tu cuenta segura", 32, Color.rgb(119, 86, 255), true);
+        content.addView(title, marginTop(8));
+        TextView subtitle = body("Registra tu nombre y confirma tu PIN para que no lo olvides.", 16);
+        subtitle.setGravity(Gravity.START);
+        content.addView(subtitle, marginTop(12));
+
+        LinearLayout formCard = new LinearLayout(this);
+        formCard.setOrientation(LinearLayout.VERTICAL);
+        formCard.setPadding(dp(18), dp(18), dp(18), dp(18));
+        formCard.setBackground(roundedStroke(Color.WHITE, BORDER, 24, 1));
+        content.addView(formCard, marginTop(26));
 
         nameInput = registerInput("Nombre completo *", android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
-        content.addView(nameInput, marginTop(30));
+        formCard.addView(nameInput);
 
         pinInput = registerInput("Crea tu PIN *", android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
-        content.addView(pinInput, marginTop(10));
+        formCard.addView(pinInput, marginTop(10));
 
         pinConfirmInput = registerInput("Repite tu PIN *", android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
-        content.addView(pinConfirmInput, marginTop(10));
+        formCard.addView(pinConfirmInput, marginTop(10));
+
+        LinearLayout note = new LinearLayout(this);
+        note.setOrientation(LinearLayout.HORIZONTAL);
+        note.setGravity(Gravity.CENTER_VERTICAL);
+        note.setPadding(dp(14), dp(12), dp(14), dp(12));
+        note.setBackground(roundedStroke(Color.rgb(246, 247, 250), BORDER, 16, 1));
+        TextView noteIcon = text("•", 18, Color.rgb(119, 86, 255), true);
+        note.addView(noteIcon, new LinearLayout.LayoutParams(dp(18), dp(18)));
+        TextView noteText = text("El PIN queda almacenado como hash para mayor seguridad.", 13, TEXT_MUTED, false);
+        LinearLayout.LayoutParams noteTextParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
+        noteTextParams.setMargins(dp(10), 0, 0, 0);
+        note.addView(noteText, noteTextParams);
+        formCard.addView(note, marginTop(14));
 
         termsCheckBox = new CheckBox(this);
         termsCheckBox.setText("Acepto los terminos y condiciones");
@@ -326,10 +351,10 @@ public class MainActivity extends AppCompatActivity {
         termsCheckBox.setTextSize(14);
         termsCheckBox.setButtonTintList(new ColorStateList(
                 new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}},
-                new int[]{PRIMARY, Color.rgb(156, 166, 176)}
+                new int[]{Color.rgb(119, 86, 255), Color.rgb(156, 166, 176)}
         ));
         termsCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> updateRegisterState(false));
-        content.addView(termsCheckBox, marginTop(18));
+        formCard.addView(termsCheckBox, marginTop(14));
 
         continueButton = primaryButton("Continuar");
         continueButton.setOnClickListener(v -> {
@@ -497,8 +522,21 @@ public class MainActivity extends AppCompatActivity {
         content.addView(topBackRow(v -> showRegisterScreen()));
         content.addView(progressBar());
 
-        content.addView(title("Verifica tu celular", 30), marginTop(42));
-        content.addView(body("Ingresa el codigo SMS enviado a " + countryCode + " " + phone + ".", 16), marginTop(10));
+        TextView eyebrow = text("VERIFICACION", 12, Color.rgb(126, 132, 145), true);
+        eyebrow.setLetterSpacing(0.12f);
+        content.addView(eyebrow, marginTop(32));
+
+        TextView title = text("Confirma tu acceso", 32, Color.rgb(119, 86, 255), true);
+        content.addView(title, marginTop(8));
+        TextView subtitle = body("Ingresa el codigo de verificacion enviado a " + countryCode + " " + phone + ".", 16);
+        subtitle.setGravity(Gravity.START);
+        content.addView(subtitle, marginTop(10));
+
+        LinearLayout codeCard = new LinearLayout(this);
+        codeCard.setOrientation(LinearLayout.VERTICAL);
+        codeCard.setPadding(dp(18), dp(18), dp(18), dp(18));
+        codeCard.setBackground(roundedStroke(Color.WHITE, BORDER, 24, 1));
+        content.addView(codeCard, marginTop(24));
 
         EditText otpInput = new EditText(this);
         otpInput.setHint("Codigo de verificacion");
@@ -508,13 +546,13 @@ public class MainActivity extends AppCompatActivity {
         otpInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
         otpInput.setBackground(roundedStroke(Color.WHITE, BORDER, 18, 1));
         otpInput.setPadding(dp(14), 0, dp(14), 0);
-        content.addView(otpInput, new LinearLayout.LayoutParams(
+        codeCard.addView(otpInput, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 dp(58)
         ));
 
         Button verify = primaryButton("Verificar y continuar");
-        content.addView(verify, marginTop(22));
+        codeCard.addView(verify, marginTop(18));
         verify.setOnClickListener(v -> {
             String token = otpInput.getText().toString().trim();
             if (token.isEmpty()) {
@@ -533,7 +571,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showAccountsScreen(SupabaseClient.Account createdAccount) {
         FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(SURFACE);
+        root.setBackgroundColor(Color.WHITE);
 
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
@@ -541,95 +579,87 @@ public class MainActivity extends AppCompatActivity {
 
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(dp(18), dp(18), dp(18), dp(24));
+        content.setPadding(dp(22), dp(28), dp(22), dp(24));
         scroll.addView(content, new ScrollView.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         ));
 
+        TextView eyebrow = text("TU CUENTA", 12, Color.rgb(126, 132, 145), true);
+        eyebrow.setLetterSpacing(0.12f);
+        content.addView(eyebrow, marginTop(8));
+
+        TextView title = text("Tu cuenta segura", 32, Color.rgb(119, 86, 255), true);
+        content.addView(title, marginTop(8));
+        TextView subtitle = body("Tu perfil principal ya esta listo y sincronizado con Supabase.", 16);
+        subtitle.setGravity(Gravity.START);
+        content.addView(subtitle, marginTop(10));
+
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
-        panel.setPadding(dp(20), dp(20), dp(20), dp(20));
+        panel.setPadding(dp(18), dp(18), dp(18), dp(18));
         panel.setBackground(roundedStroke(Color.WHITE, BORDER, 28, 1));
-        content.addView(panel, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        ));
+        content.addView(panel, marginTop(24));
 
-        panel.addView(profileHeader());
+        panel.addView(profileSummaryCard(createdAccount));
 
-        panel.addView(profileAvatar(createdAccount), marginTop(18));
+        LinearLayout actions = new LinearLayout(this);
+        actions.setOrientation(LinearLayout.VERTICAL);
+        actions.setPadding(0, dp(12), 0, 0);
+        actions.setBackground(roundedStroke(Color.rgb(248, 249, 251), BORDER, 22, 1));
+        actions.addView(settingsRow("Perfil", "user", v -> Toast.makeText(this, "Perfil", Toast.LENGTH_SHORT).show()), marginTop(10));
+        actions.addView(settingsRow("Cambiar PIN", "lock", v -> Toast.makeText(this, "Cambiar PIN", Toast.LENGTH_SHORT).show()), marginTop(6));
+        actions.addView(settingsRow("Soporte", "chat", v -> Toast.makeText(this, "Soporte en chat", Toast.LENGTH_SHORT).show()), marginTop(6));
+        panel.addView(actions, marginTop(18));
 
-        TextView name = text(resolveAccountName(createdAccount), 19, INK, true);
-        name.setGravity(Gravity.CENTER_HORIZONTAL);
-        panel.addView(name, marginTop(12));
-
-        TextView phone = text(resolveAccountPhone(createdAccount), 13, Color.rgb(186, 186, 190), false);
-        phone.setGravity(Gravity.CENTER_HORIZONTAL);
-        panel.addView(phone, marginTop(4));
-
-        TextView section = text("Account Settings", 15, Color.rgb(190, 190, 194), false);
-        panel.addView(section, marginTop(28));
-
-        panel.addView(settingsRow("Profile setting", "user", v -> Toast.makeText(this, "Perfil", Toast.LENGTH_SHORT).show()), marginTop(10));
-        panel.addView(settingsRow("Change password", "lock", v -> Toast.makeText(this, "Cambiar PIN", Toast.LENGTH_SHORT).show()), marginTop(6));
-        panel.addView(settingsRow("Chat support", "chat", v -> Toast.makeText(this, "Soporte en chat", Toast.LENGTH_SHORT).show()), marginTop(6));
-
-        View divider = new DashedDividerView(this);
-        LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(12)
-        );
-        dividerParams.setMargins(0, dp(18), 0, dp(10));
-        panel.addView(divider, dividerParams);
-
-        panel.addView(profileActionRow("Log out", PRIMARY, false, v -> {
+        LinearLayout footerActions = new LinearLayout(this);
+        footerActions.setOrientation(LinearLayout.VERTICAL);
+        footerActions.setPadding(0, dp(18), 0, 0);
+        footerActions.addView(primaryButton("Entrar al panel"));
+        Button logout = outlineButton("Cerrar sesion");
+        logout.setOnClickListener(v -> {
             activeSession = null;
             showLoginScreen();
-        }), marginTop(0));
-        panel.addView(profileActionRow("Deactivate account", Color.rgb(255, 108, 86), true, v ->
-                Toast.makeText(this, "Accion pendiente de confirmar en backend", Toast.LENGTH_SHORT).show()), marginTop(8));
+        });
+        footerActions.addView(logout, marginTop(12));
+        panel.addView(footerActions, marginTop(18));
 
         setContentView(root);
     }
 
-    private LinearLayout profileHeader() {
+    private View profileSummaryCard(SupabaseClient.Account account) {
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(18), dp(18), dp(18), dp(18));
+        card.setBackground(roundedStroke(Color.WHITE, BORDER, 22, 1));
+
         LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.HORIZONTAL);
         header.setGravity(Gravity.CENTER_VERTICAL);
-
-        TextView menu = text("≡", 21, Color.rgb(182, 182, 188), false);
-        menu.setGravity(Gravity.CENTER);
-        menu.setBackground(rounded(Color.WHITE, 18));
-        header.addView(menu, new LinearLayout.LayoutParams(dp(36), dp(36)));
-
-        TextView title = text("My Profile", 18, INK, true);
-        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
-        title.setGravity(Gravity.CENTER);
-        header.addView(title, titleParams);
-
-        View spacerRight = new View(this);
-        header.addView(spacerRight, new LinearLayout.LayoutParams(dp(36), dp(36)));
-        return header;
-    }
-
-    private View profileAvatar(SupabaseClient.Account account) {
-        LinearLayout wrapper = new LinearLayout(this);
-        wrapper.setGravity(Gravity.CENTER_HORIZONTAL);
-        wrapper.setOrientation(LinearLayout.VERTICAL);
 
         FrameLayout avatar = new FrameLayout(this);
         avatar.setBackground(rounded(Color.rgb(242, 237, 255), 999));
-        LinearLayout.LayoutParams avatarParams = new LinearLayout.LayoutParams(dp(70), dp(70));
-
         View icon = new ProfileAvatarGlyph(this);
         avatar.addView(icon, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 Gravity.CENTER
         ));
+        header.addView(avatar, new LinearLayout.LayoutParams(dp(56), dp(56)));
 
-        wrapper.addView(avatar, avatarParams);
-        return wrapper;
+        LinearLayout copy = new LinearLayout(this);
+        copy.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams copyParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
+        copyParams.setMargins(dp(12), 0, 0, 0);
+        header.addView(copy, copyParams);
+
+        copy.addView(text(resolveAccountName(account), 18, INK, true));
+        copy.addView(text("Cuenta principal de DIBAYS", 13, TEXT_MUTED, false));
+
+        card.addView(header);
+        card.addView(featureLine("Estado", "Sincronizada con Supabase"), marginTop(18));
+        card.addView(featureLine("Seguridad", "PIN confirmado"), marginTop(10));
+        return card;
     }
 
     private View settingsRow(String label, String iconType, View.OnClickListener listener) {
