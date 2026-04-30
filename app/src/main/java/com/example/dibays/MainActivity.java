@@ -592,7 +592,7 @@ public class MainActivity extends AppCompatActivity {
             activeSession = null;
             showLoginScreen();
         }), marginTop(0));
-        panel.addView(profileActionRow("Deactivate account", Color.rgb(255, 84, 57), true, v ->
+        panel.addView(profileActionRow("Deactivate account", Color.rgb(255, 108, 86), true, v ->
                 Toast.makeText(this, "Accion pendiente de confirmar en backend", Toast.LENGTH_SHORT).show()), marginTop(8));
 
         setContentView(root);
