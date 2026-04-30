@@ -1,6 +1,5 @@
 package com.example.dibays;
 
-import android.app.AlertDialog;
 import android.content.res.ColorStateList;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -42,203 +41,8 @@ public class MainActivity extends AppCompatActivity {
     private EditText nameInput;
     private EditText pinInput;
     private EditText pinConfirmInput;
-    private EditText phoneInput;
     private CheckBox termsCheckBox;
     private Button continueButton;
-    private LinearLayout phoneFieldContainer;
-    private TextView countryBadgeText;
-    private TextView countryCodeText;
-    private Country selectedCountry = COUNTRIES[20];
-    private SupabaseClient.Session activeSession;
-
-    private static final Country[] COUNTRIES = new Country[]{
-            new Country("AF", "Afganistan", "+93"),
-            new Country("AL", "Albania", "+355"),
-            new Country("DE", "Alemania", "+49"),
-            new Country("AD", "Andorra", "+376"),
-            new Country("AO", "Angola", "+244"),
-            new Country("AG", "Antigua y Barbuda", "+1"),
-            new Country("SA", "Arabia Saudita", "+966"),
-            new Country("DZ", "Argelia", "+213"),
-            new Country("AR", "Argentina", "+54"),
-            new Country("AM", "Armenia", "+374"),
-            new Country("AU", "Australia", "+61"),
-            new Country("AT", "Austria", "+43"),
-            new Country("AZ", "Azerbaiyan", "+994"),
-            new Country("BS", "Bahamas", "+1"),
-            new Country("BH", "Barein", "+973"),
-            new Country("BD", "Bangladesh", "+880"),
-            new Country("BB", "Barbados", "+1"),
-            new Country("BE", "Belgica", "+32"),
-            new Country("BZ", "Belice", "+501"),
-            new Country("BJ", "Benin", "+229"),
-            new Country("BO", "Bolivia", "+591"),
-            new Country("BA", "Bosnia y Herzegovina", "+387"),
-            new Country("BW", "Botsuana", "+267"),
-            new Country("BR", "Brasil", "+55"),
-            new Country("BN", "Brunei", "+673"),
-            new Country("BG", "Bulgaria", "+359"),
-            new Country("BF", "Burkina Faso", "+226"),
-            new Country("BI", "Burundi", "+257"),
-            new Country("BT", "Butan", "+975"),
-            new Country("CV", "Cabo Verde", "+238"),
-            new Country("KH", "Camboya", "+855"),
-            new Country("CM", "Camerun", "+237"),
-            new Country("CA", "Canada", "+1"),
-            new Country("QA", "Catar", "+974"),
-            new Country("TD", "Chad", "+235"),
-            new Country("CL", "Chile", "+56"),
-            new Country("CN", "China", "+86"),
-            new Country("CY", "Chipre", "+357"),
-            new Country("CO", "Colombia", "+57"),
-            new Country("KM", "Comoras", "+269"),
-            new Country("CG", "Congo", "+242"),
-            new Country("KR", "Corea del Sur", "+82"),
-            new Country("CR", "Costa Rica", "+506"),
-            new Country("CI", "Costa de Marfil", "+225"),
-            new Country("HR", "Croacia", "+385"),
-            new Country("CU", "Cuba", "+53"),
-            new Country("DK", "Dinamarca", "+45"),
-            new Country("DM", "Dominica", "+1"),
-            new Country("EC", "Ecuador", "+593"),
-            new Country("EG", "Egipto", "+20"),
-            new Country("SV", "El Salvador", "+503"),
-            new Country("AE", "Emiratos Arabes Unidos", "+971"),
-            new Country("ER", "Eritrea", "+291"),
-            new Country("SK", "Eslovaquia", "+421"),
-            new Country("SI", "Eslovenia", "+386"),
-            new Country("ES", "Espana", "+34"),
-            new Country("US", "Estados Unidos", "+1"),
-            new Country("EE", "Estonia", "+372"),
-            new Country("ET", "Etiopia", "+251"),
-            new Country("PH", "Filipinas", "+63"),
-            new Country("FI", "Finlandia", "+358"),
-            new Country("FJ", "Fiyi", "+679"),
-            new Country("FR", "Francia", "+33"),
-            new Country("GA", "Gabon", "+241"),
-            new Country("GM", "Gambia", "+220"),
-            new Country("GE", "Georgia", "+995"),
-            new Country("GH", "Ghana", "+233"),
-            new Country("GD", "Granada", "+1"),
-            new Country("GR", "Grecia", "+30"),
-            new Country("GT", "Guatemala", "+502"),
-            new Country("GN", "Guinea", "+224"),
-            new Country("GQ", "Guinea Ecuatorial", "+240"),
-            new Country("GW", "Guinea-Bisau", "+245"),
-            new Country("GY", "Guyana", "+592"),
-            new Country("HT", "Haiti", "+509"),
-            new Country("HN", "Honduras", "+504"),
-            new Country("HU", "Hungria", "+36"),
-            new Country("IN", "India", "+91"),
-            new Country("ID", "Indonesia", "+62"),
-            new Country("IQ", "Irak", "+964"),
-            new Country("IR", "Iran", "+98"),
-            new Country("IE", "Irlanda", "+353"),
-            new Country("IS", "Islandia", "+354"),
-            new Country("IL", "Israel", "+972"),
-            new Country("IT", "Italia", "+39"),
-            new Country("JM", "Jamaica", "+1"),
-            new Country("JP", "Japon", "+81"),
-            new Country("JO", "Jordania", "+962"),
-            new Country("KZ", "Kazajistan", "+7"),
-            new Country("KE", "Kenia", "+254"),
-            new Country("KG", "Kirguistan", "+996"),
-            new Country("KI", "Kiribati", "+686"),
-            new Country("KW", "Kuwait", "+965"),
-            new Country("LA", "Laos", "+856"),
-            new Country("LS", "Lesoto", "+266"),
-            new Country("LV", "Letonia", "+371"),
-            new Country("LB", "Libano", "+961"),
-            new Country("LR", "Liberia", "+231"),
-            new Country("LY", "Libia", "+218"),
-            new Country("LI", "Liechtenstein", "+423"),
-            new Country("LT", "Lituania", "+370"),
-            new Country("LU", "Luxemburgo", "+352"),
-            new Country("MK", "Macedonia del Norte", "+389"),
-            new Country("MG", "Madagascar", "+261"),
-            new Country("MY", "Malasia", "+60"),
-            new Country("MW", "Malaui", "+265"),
-            new Country("MV", "Maldivas", "+960"),
-            new Country("ML", "Mali", "+223"),
-            new Country("MT", "Malta", "+356"),
-            new Country("MA", "Marruecos", "+212"),
-            new Country("MU", "Mauricio", "+230"),
-            new Country("MR", "Mauritania", "+222"),
-            new Country("MX", "Mexico", "+52"),
-            new Country("FM", "Micronesia", "+691"),
-            new Country("MD", "Moldavia", "+373"),
-            new Country("MC", "Monaco", "+377"),
-            new Country("MN", "Mongolia", "+976"),
-            new Country("ME", "Montenegro", "+382"),
-            new Country("MZ", "Mozambique", "+258"),
-            new Country("MM", "Myanmar", "+95"),
-            new Country("NA", "Namibia", "+264"),
-            new Country("NR", "Nauru", "+674"),
-            new Country("NP", "Nepal", "+977"),
-            new Country("NI", "Nicaragua", "+505"),
-            new Country("NE", "Niger", "+227"),
-            new Country("NG", "Nigeria", "+234"),
-            new Country("NO", "Noruega", "+47"),
-            new Country("NZ", "Nueva Zelanda", "+64"),
-            new Country("OM", "Oman", "+968"),
-            new Country("NL", "Paises Bajos", "+31"),
-            new Country("PK", "Pakistan", "+92"),
-            new Country("PW", "Palaos", "+680"),
-            new Country("PA", "Panama", "+507"),
-            new Country("PG", "Papua Nueva Guinea", "+675"),
-            new Country("PY", "Paraguay", "+595"),
-            new Country("PE", "Peru", "+51"),
-            new Country("PL", "Polonia", "+48"),
-            new Country("PT", "Portugal", "+351"),
-            new Country("GB", "Reino Unido", "+44"),
-            new Country("CF", "Republica Centroafricana", "+236"),
-            new Country("CZ", "Republica Checa", "+420"),
-            new Country("DO", "Republica Dominicana", "+1"),
-            new Country("RW", "Ruanda", "+250"),
-            new Country("RO", "Rumania", "+40"),
-            new Country("RU", "Rusia", "+7"),
-            new Country("WS", "Samoa", "+685"),
-            new Country("SM", "San Marino", "+378"),
-            new Country("LC", "Santa Lucia", "+1"),
-            new Country("ST", "Santo Tome y Principe", "+239"),
-            new Country("SN", "Senegal", "+221"),
-            new Country("RS", "Serbia", "+381"),
-            new Country("SC", "Seychelles", "+248"),
-            new Country("SL", "Sierra Leona", "+232"),
-            new Country("SG", "Singapur", "+65"),
-            new Country("SY", "Siria", "+963"),
-            new Country("SO", "Somalia", "+252"),
-            new Country("LK", "Sri Lanka", "+94"),
-            new Country("SZ", "Suazilandia", "+268"),
-            new Country("ZA", "Sudafrica", "+27"),
-            new Country("SD", "Sudan", "+249"),
-            new Country("SS", "Sudan del Sur", "+211"),
-            new Country("SE", "Suecia", "+46"),
-            new Country("CH", "Suiza", "+41"),
-            new Country("SR", "Surinam", "+597"),
-            new Country("TH", "Tailandia", "+66"),
-            new Country("TZ", "Tanzania", "+255"),
-            new Country("TJ", "Tayikistan", "+992"),
-            new Country("TL", "Timor Oriental", "+670"),
-            new Country("TG", "Togo", "+228"),
-            new Country("TO", "Tonga", "+676"),
-            new Country("TT", "Trinidad y Tobago", "+1"),
-            new Country("TN", "Tunez", "+216"),
-            new Country("TM", "Turkmenistan", "+993"),
-            new Country("TR", "Turquia", "+90"),
-            new Country("TV", "Tuvalu", "+688"),
-            new Country("UA", "Ucrania", "+380"),
-            new Country("UG", "Uganda", "+256"),
-            new Country("UY", "Uruguay", "+598"),
-            new Country("UZ", "Uzbekistan", "+998"),
-            new Country("VU", "Vanuatu", "+678"),
-            new Country("VA", "Vaticano", "+379"),
-            new Country("VE", "Venezuela", "+58"),
-            new Country("VN", "Vietnam", "+84"),
-            new Country("YE", "Yemen", "+967"),
-            new Country("ZM", "Zambia", "+260"),
-            new Country("ZW", "Zimbabue", "+263")
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -277,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
         TextView title = title("Administra tus fardos facil y seguro", 30);
         card.addView(title);
 
-        TextView subtitle = body("Controla tus ventas, deudas, clientes, proveedores e inventario desde tu celular.", 16);
+        TextView subtitle = body("Controla tus ventas, deudas, clientes, proveedores e inventario desde tu negocio.", 16);
         LinearLayout.LayoutParams subtitleParams = marginTop(12);
         card.addView(subtitle, subtitleParams);
 
@@ -346,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
         formCard.addView(note, marginTop(14));
 
         termsCheckBox = new CheckBox(this);
-        termsCheckBox.setText("Acepto los terminos y condiciones");
+        termsCheckBox.setText("Acepto los términos y condiciones");
         termsCheckBox.setTextColor(TEXT_MUTED);
         termsCheckBox.setTextSize(14);
         termsCheckBox.setButtonTintList(new ColorStateList(
@@ -414,13 +218,13 @@ public class MainActivity extends AppCompatActivity {
         headline.setGravity(Gravity.START);
         brandPanel.addView(headline, marginTop(10));
 
-        TextView summary = body("Acceso limpio y rapido para administrar cuentas, ventas e inventario con estilo bancario.", 16);
+        TextView summary = body("Acceso limpio para administrar cuentas, ventas e inventario con estilo bancario.", 16);
         summary.setGravity(Gravity.START);
         brandPanel.addView(summary, marginTop(14));
 
         brandPanel.addView(featureLine("Registro protegido", "PIN confirmado y datos ordenados"), marginTop(28));
         brandPanel.addView(featureLine("Acceso rapido", "Continua en segundos"), marginTop(10));
-        brandPanel.addView(featureLine("Diseño limpio", "Espacio blanco y jerarquia clara"), marginTop(10));
+        brandPanel.addView(featureLine("Diseño limpio", "Espacio blanco y jerarquía clara"), marginTop(10));
 
         LoginIllustrationView financePanel = new LoginIllustrationView(this);
         LinearLayout.LayoutParams financeParams = new LinearLayout.LayoutParams(
@@ -451,7 +255,7 @@ public class MainActivity extends AppCompatActivity {
         title.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         loginPanel.addView(title, marginTop(24));
 
-        TextView subtitle = body("Usa tu numero celular para continuar con una verificacion segura.", 15);
+        TextView subtitle = body("Usa tu nombre y PIN para continuar con una verificación segura.", 15);
         loginPanel.addView(subtitle, marginTop(8));
 
         LinearLayout secureNotice = new LinearLayout(this);
@@ -471,9 +275,9 @@ public class MainActivity extends AppCompatActivity {
         secureNotice.addView(secureText, secureTextParams);
         loginPanel.addView(secureNotice, marginTop(22));
 
-        Button phoneLogin = primaryButton("Ingresar con numero celular");
-        phoneLogin.setOnClickListener(v -> showRegisterScreen());
-        loginPanel.addView(phoneLogin, marginTop(24));
+        Button pinLogin = primaryButton("Ingresar con PIN");
+        pinLogin.setOnClickListener(v -> showRegisterScreen());
+        loginPanel.addView(pinLogin, marginTop(24));
 
         Button googleLogin = outlineButton("Ingresar con Google");
         googleLogin.setOnClickListener(v -> Toast.makeText(this, "Google requiere configurar OAuth en Supabase.", Toast.LENGTH_LONG).show());
@@ -506,61 +310,6 @@ public class MainActivity extends AppCompatActivity {
             loginParams.setMargins(0, dp(16), 0, 0);
         }
         shell.addView(loginPanel, loginParams);
-
-        setContentView(root);
-    }
-
-    private void showOtpScreen(String name, String pinHash, String phone, String countryCode) {
-        FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(Color.WHITE);
-
-        LinearLayout content = new LinearLayout(this);
-        content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(dp(22), dp(28), dp(22), dp(28));
-        root.addView(content, fullSize());
-
-        content.addView(topBackRow(v -> showRegisterScreen()));
-        content.addView(progressBar());
-
-        TextView eyebrow = text("VERIFICACION", 12, Color.rgb(126, 132, 145), true);
-        eyebrow.setLetterSpacing(0.12f);
-        content.addView(eyebrow, marginTop(32));
-
-        TextView title = text("Confirma tu acceso", 32, Color.rgb(119, 86, 255), true);
-        content.addView(title, marginTop(8));
-        TextView subtitle = body("Ingresa el codigo de verificacion enviado a " + countryCode + " " + phone + ".", 16);
-        subtitle.setGravity(Gravity.START);
-        content.addView(subtitle, marginTop(10));
-
-        LinearLayout codeCard = new LinearLayout(this);
-        codeCard.setOrientation(LinearLayout.VERTICAL);
-        codeCard.setPadding(dp(18), dp(18), dp(18), dp(18));
-        codeCard.setBackground(roundedStroke(Color.WHITE, BORDER, 24, 1));
-        content.addView(codeCard, marginTop(24));
-
-        EditText otpInput = new EditText(this);
-        otpInput.setHint("Codigo de verificacion");
-        otpInput.setSingleLine(true);
-        otpInput.setTextSize(18);
-        otpInput.setTextColor(PRIMARY);
-        otpInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
-        otpInput.setBackground(roundedStroke(Color.WHITE, BORDER, 18, 1));
-        otpInput.setPadding(dp(14), 0, dp(14), 0);
-        codeCard.addView(otpInput, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(58)
-        ));
-
-        Button verify = primaryButton("Verificar y continuar");
-        codeCard.addView(verify, marginTop(18));
-        verify.setOnClickListener(v -> {
-            String token = otpInput.getText().toString().trim();
-            if (token.isEmpty()) {
-                otpInput.setBackground(roundedStroke(Color.WHITE, ERROR, 18, 2));
-                return;
-            }
-            verifyOtp(name, pinHash, phone, countryCode, token, verify);
-        });
 
         setContentView(root);
     }
@@ -617,10 +366,7 @@ public class MainActivity extends AppCompatActivity {
         footerActions.setPadding(0, dp(18), 0, 0);
         footerActions.addView(primaryButton("Entrar al panel"));
         Button logout = outlineButton("Cerrar sesion");
-        logout.setOnClickListener(v -> {
-            activeSession = null;
-            showLoginScreen();
-        });
+        logout.setOnClickListener(v -> showLoginScreen());
         footerActions.addView(logout, marginTop(12));
         panel.addView(footerActions, marginTop(18));
 
@@ -794,40 +540,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private View accountCard(SupabaseClient.Account account) {
-        LinearLayout card = new LinearLayout(this);
-        card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(dp(16), dp(16), dp(16), dp(16));
-        card.setBackground(roundedStroke(Color.WHITE, BORDER, 18, 1));
-
-        card.addView(text(account.name == null || account.name.isEmpty() ? "Cuenta principal" : account.name, 18, INK, true));
-        card.addView(text(resolveAccountPhone(account), 13, TEXT_MUTED, false), marginTop(6));
-
-        Button enter = primaryButton("Entrar");
-        card.addView(enter, marginTop(14));
-        return card;
-    }
-
-    private LinearLayout trustRow(String title, String value) {
-        LinearLayout row = new LinearLayout(this);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(0, dp(8), 0, dp(8));
-
-        TextView dot = text("", 1, WHATSAPP, true);
-        dot.setBackground(rounded(WHATSAPP, 5));
-        row.addView(dot, new LinearLayout.LayoutParams(dp(10), dp(10)));
-
-        LinearLayout copy = new LinearLayout(this);
-        copy.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams copyParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
-        copyParams.setMargins(dp(12), 0, 0, 0);
-        row.addView(copy, copyParams);
-
-        copy.addView(text(title, 14, INK, true));
-        copy.addView(text(value, 13, TEXT_MUTED, false));
-        return row;
-    }
-
     private LinearLayout featureLine(String title, String value) {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
@@ -853,18 +565,8 @@ public class MainActivity extends AppCompatActivity {
             if (account.name != null && !account.name.trim().isEmpty()) {
                 return account.name.trim();
             }
-            if (account.phone != null && !account.phone.trim().isEmpty()) {
-                return account.phone.trim();
-            }
         }
-        return "Karim Santel";
-    }
-
-    private String resolveAccountPhone(SupabaseClient.Account account) {
-        if (account != null && account.phone != null && !account.phone.trim().isEmpty()) {
-            return account.phone.trim();
-        }
-        return "0167873902";
+        return "Cuenta principal";
     }
 
     private String iconGlyph(String iconType) {
@@ -904,24 +606,6 @@ public class MainActivity extends AppCompatActivity {
         View rest = new View(this);
         track.addView(rest, new LinearLayout.LayoutParams(0, dp(6), 0.55f));
         return track;
-    }
-
-    private void showCountryPicker() {
-        String[] countryItems = new String[COUNTRIES.length];
-        for (int i = 0; i < COUNTRIES.length; i++) {
-            countryItems[i] = COUNTRIES[i].iso + "  " + COUNTRIES[i].name + "  " + COUNTRIES[i].dialCode;
-        }
-
-        new AlertDialog.Builder(this)
-                .setTitle("Selecciona tu pais")
-                .setItems(countryItems, (dialog, which) -> {
-                    selectedCountry = COUNTRIES[which];
-                    countryBadgeText.setText(selectedCountry.iso);
-                    countryCodeText.setText(selectedCountry.dialCode + " v");
-                    phoneInput.requestFocus();
-                    updateRegisterState(false);
-                })
-                .show();
     }
 
     private void updateRegisterState(boolean showErrors) {
@@ -984,61 +668,6 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    private void verifyOtp(String name, String pinHash, String phone, String countryCode, String token, Button verifyButton) {
-        String fullPhone = countryCode + phone;
-        verifyButton.setEnabled(false);
-        verifyButton.setText("Verificando...");
-
-        new Thread(() -> {
-            try {
-                SupabaseClient client = new SupabaseClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY);
-                activeSession = client.verifyPhoneOtp(fullPhone, token);
-                client.registerUser(name, pinHash, phone, countryCode, activeSession);
-                runOnUiThread(() -> {
-                    Toast.makeText(this, "Cuenta verificada", Toast.LENGTH_SHORT).show();
-                    showAccountsScreen();
-                });
-            } catch (Exception exception) {
-                runOnUiThread(() -> {
-                    verifyButton.setEnabled(true);
-                    verifyButton.setText("Verificar y continuar");
-                    Toast.makeText(this, "No se pudo verificar: " + exception.getMessage(), Toast.LENGTH_LONG).show();
-                });
-            }
-        }).start();
-    }
-
-    private void loadAccounts(LinearLayout accountList) {
-        if (activeSession == null) {
-            accountList.removeAllViews();
-            accountList.addView(text("Inicia sesion para cargar tus cuentas.", 15, TEXT_MUTED, false));
-            return;
-        }
-
-        new Thread(() -> {
-            try {
-                java.util.List<SupabaseClient.Account> accounts =
-                        new SupabaseClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
-                                .listAccounts(activeSession.accessToken);
-                runOnUiThread(() -> {
-                    accountList.removeAllViews();
-                    if (accounts.isEmpty()) {
-                        accountList.addView(text("No hay cuentas registradas.", 15, TEXT_MUTED, false));
-                        return;
-                    }
-                    for (SupabaseClient.Account account : accounts) {
-                        accountList.addView(accountCard(account), marginTop(10));
-                    }
-                });
-            } catch (Exception exception) {
-                runOnUiThread(() -> {
-                    accountList.removeAllViews();
-                    accountList.addView(text("No se pudieron cargar las cuentas: " + exception.getMessage(), 14, ERROR, false));
-                });
-            }
-        }).start();
-    }
-
     private String hashPin(String pin) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -1067,10 +696,6 @@ public class MainActivity extends AppCompatActivity {
         TextView view = text(value, size, TEXT_MUTED, false);
         view.setLineSpacing(dp(4), 1.0f);
         return view;
-    }
-
-    private TextView label(String value) {
-        return text(value, 14, PRIMARY, true);
     }
 
     private EditText registerInput(String hint, int inputType) {
@@ -1142,18 +767,6 @@ public class MainActivity extends AppCompatActivity {
         return button;
     }
 
-    private Button whatsappButton(String value) {
-        Button button = new Button(this);
-        button.setText("WhatsApp  " + value);
-        button.setTextSize(14);
-        button.setTextColor(Color.WHITE);
-        button.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        button.setAllCaps(false);
-        button.setPadding(dp(16), 0, dp(16), 0);
-        button.setBackground(rounded(WHATSAPP, 26));
-        return button;
-    }
-
     private GradientDrawable rounded(int color, int radiusDp) {
         GradientDrawable drawable = new GradientDrawable();
         drawable.setColor(color);
@@ -1193,18 +806,6 @@ public class MainActivity extends AppCompatActivity {
 
     private int dp(int value) {
         return Math.round(value * getResources().getDisplayMetrics().density);
-    }
-
-    private static class Country {
-        final String iso;
-        final String name;
-        final String dialCode;
-
-        Country(String iso, String name, String dialCode) {
-            this.iso = iso;
-            this.name = name;
-            this.dialCode = dialCode;
-        }
     }
 
     private static class HeroBusinessView extends View {
@@ -1319,25 +920,5 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private static class BoliviaFlagView extends View {
-        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-
-        BoliviaFlagView(android.content.Context context) {
-            super(context);
-        }
-
-        @Override
-        protected void onDraw(Canvas canvas) {
-            super.onDraw(canvas);
-            float stripe = getHeight() / 3f;
-            paint.setStyle(Paint.Style.FILL);
-            paint.setColor(Color.rgb(213, 43, 30));
-            canvas.drawRect(0, 0, getWidth(), stripe, paint);
-            paint.setColor(Color.rgb(247, 226, 66));
-            canvas.drawRect(0, stripe, getWidth(), stripe * 2, paint);
-            paint.setColor(Color.rgb(0, 121, 52));
-            canvas.drawRect(0, stripe * 2, getWidth(), getHeight(), paint);
-        }
-    }
 }
 

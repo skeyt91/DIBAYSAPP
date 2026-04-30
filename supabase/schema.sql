@@ -3,8 +3,6 @@ create table if not exists public.cuentas (
   auth_user_id uuid references auth.users(id) on delete cascade,
   nombre text not null,
   tipo text not null default 'principal',
-  telefono text,
-  pais_codigo text,
   activa boolean not null default true,
   created_at timestamptz not null default now()
 );
@@ -13,12 +11,9 @@ create table if not exists public.usuarios (
   id uuid primary key default gen_random_uuid(),
   auth_user_id uuid references auth.users(id) on delete cascade,
   cuenta_id uuid references public.cuentas(id) on delete cascade,
-  celular text,
-  pais_codigo text,
-  nombre text,
-  pin_hash text,
-  created_at timestamptz not null default now(),
-  unique (pais_codigo, celular)
+  nombre text not null,
+  pin_hash text not null,
+  created_at timestamptz not null default now()
 );
 
 create table if not exists public.productos (
@@ -38,10 +33,9 @@ alter table public.cuentas add column if not exists auth_user_id uuid references
 alter table public.usuarios add column if not exists auth_user_id uuid references auth.users(id) on delete cascade;
 alter table public.usuarios add column if not exists pin_hash text;
 alter table public.productos add column if not exists auth_user_id uuid references auth.users(id) on delete cascade;
+
 alter table public.cuentas alter column auth_user_id drop not null;
 alter table public.usuarios alter column auth_user_id drop not null;
-alter table public.usuarios alter column celular drop not null;
-alter table public.usuarios alter column pais_codigo drop not null;
 alter table public.productos alter column auth_user_id drop not null;
 
 create index if not exists cuentas_auth_user_id_idx on public.cuentas(auth_user_id);
@@ -51,13 +45,6 @@ create index if not exists productos_auth_user_id_idx on public.productos(auth_u
 alter table public.cuentas enable row level security;
 alter table public.usuarios enable row level security;
 alter table public.productos enable row level security;
-
-drop policy if exists "lectura temporal cuentas" on public.cuentas;
-drop policy if exists "insert temporal cuentas" on public.cuentas;
-drop policy if exists "lectura temporal usuarios" on public.usuarios;
-drop policy if exists "insert temporal usuarios" on public.usuarios;
-drop policy if exists "lectura temporal productos" on public.productos;
-drop policy if exists "insert temporal productos" on public.productos;
 
 drop policy if exists "cuentas propias select" on public.cuentas;
 drop policy if exists "cuentas propias insert" on public.cuentas;
